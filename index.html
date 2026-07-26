@@ -82,7 +82,8 @@ body.width-wide .topbar-inner { max-width: 1440px; }
 .logo {
     display: flex; align-items: center; gap: 8px; font-weight: 800;
     font-size: 16px; color: var(--ink); flex-shrink: 0;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.01em; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 .logo-icon {
     width: 24px; height: 24px;
@@ -95,6 +96,7 @@ body.width-wide .topbar-inner { max-width: 1440px; }
     font-weight: 600; color: var(--brand); background: var(--brand-light);
     border: 1px solid rgba(255,107,0,.22); cursor: pointer; transition: .15s ease;
     font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent; outline: none;
 }
 .btn:hover { background: var(--brand); color: #fff; }
 
@@ -318,10 +320,33 @@ pre { position: relative; }
 pre:hover .copy-btn { opacity: 1; }
 .copy-btn:hover { background: var(--brand-pale); color: var(--brand); border-color: var(--brand); }
 
+/* Mobile Overlay */
+.mobile-overlay {
+    display: none;
+}
+
 /* Mobile Adjustments */
 @media(max-width: 860px) {
     .layout { flex-direction: column; padding: 20px 16px; }
-    .sidebar { flex: none; width: 100%; position: static; max-height: 300px; margin-bottom: 30px; }
+    #widthToggle { display: none; }
+    .sidebar { 
+        position: fixed; top: 59px; left: 0; right: 0; width: 100%; 
+        max-height: 60vh; z-index: 40; margin: 0; border-radius: 0 0 16px 16px;
+        transform: translateY(-120%); opacity: 0; visibility: hidden;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s, visibility 0.4s;
+        border: none; border-bottom: 1px solid var(--line);
+    }
+    .sidebar.mobile-open {
+        transform: translateY(0); opacity: 1; visibility: visible;
+    }
+    .mobile-overlay {
+        display: block; position: fixed; top: 59px; left: 0; width: 100vw; height: calc(100vh - 59px);
+        background: rgba(0,0,0,0.4); z-index: 30; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+        opacity: 0; visibility: hidden; transition: 0.3s;
+    }
+    .mobile-overlay.active {
+        opacity: 1; visibility: visible;
+    }
     .main-content { width: 100%; padding: 24px 20px; }
     .controls { gap: 8px; }
     .back-to-top { bottom: 20px; right: 20px; width: 40px; height: 40px; }
@@ -340,6 +365,7 @@ pre:hover .copy-btn { opacity: 1; }
             if (width && width !== 'medium') document.body.classList.add('width-' + width);
         })();
     </script>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
     <div id="progress-container"><div id="progress-bar"></div></div>
 
     <div class="topbar">
@@ -2772,6 +2798,42 @@ document.querySelectorAll('pre').forEach(pre => {
         }
     });
 });
+
+// Mobile TOC Toggle
+const logo = document.querySelector('.logo');
+const sidebar = document.querySelector('.sidebar');
+const mobileOverlay = document.getElementById('mobileOverlay');
+
+function toggleMobileToc() {
+    if (window.innerWidth <= 860) {
+        sidebar.classList.toggle('mobile-open');
+        mobileOverlay.classList.toggle('active');
+    }
+}
+
+function closeMobileToc() {
+    if (window.innerWidth <= 860) {
+        sidebar.classList.remove('mobile-open');
+        mobileOverlay.classList.remove('active');
+    }
+}
+
+if (logo && sidebar && mobileOverlay) {
+    logo.addEventListener('click', toggleMobileToc);
+    mobileOverlay.addEventListener('click', closeMobileToc);
+    
+    // Close when clicking a link
+    sidebar.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', closeMobileToc);
+    });
+    
+    // Close on resize if switching to desktop
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 860) {
+            closeMobileToc();
+        }
+    });
+}
 
     </script>
 </body>

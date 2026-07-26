@@ -77,7 +77,7 @@
             display: flex; align-items: center; justify-content: space-between;
             transition: max-width 0.3s ease;
         }
-        body.width-narrow .topbar-inner { max-width: 960px; }
+        body.width-narrow .topbar-inner { max-width: 1020px; }
         body.width-wide .topbar-inner { max-width: 1440px; }
         .logo {
             display: flex; align-items: center; gap: 8px; font-weight: 800;
@@ -109,7 +109,7 @@
             display: flex; gap: 40px; align-items: flex-start;
             transition: max-width 0.3s ease;
         }
-        body.width-narrow .layout { max-width: 960px; }
+        body.width-narrow .layout { max-width: 1020px; }
         body.width-wide .layout { max-width: 1440px; }
 
         /* ===== Sidebar (TOC) ===== */
@@ -133,15 +133,12 @@
         .sidebar .toc li { margin-bottom: 8px; font-size: 13.5px; line-height: 1.4; }
         .sidebar .toc a {
             color: var(--muted); transition: all 0.25s ease; display: block;
-            padding-left: 10px; border-left: 3px solid transparent;
         }
         .sidebar .toc > ul > li > a { font-weight: 700; color: var(--ink); font-size: 14.5px; }
         .sidebar .toc > ul > li > ul > li > a { font-weight: normal; font-size: 13.5px; color: var(--muted); }
         .sidebar .toc a:hover { color: var(--brand); }
         .sidebar .toc .active-toc {
             color: var(--brand) !important; font-weight: 700 !important;
-            border-left-color: var(--brand) !important;
-            background: var(--brand-light); border-radius: 0 6px 6px 0;
         }
 
         /* ===== Main Content ===== */

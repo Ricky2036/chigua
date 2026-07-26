@@ -51,6 +51,10 @@ body {
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.3s ease, color 0.3s ease, font-size 0.3s ease;
     font-size: 16px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 body.size-small { font-size: 14px; }
 body.size-large { font-size: 18px; }
@@ -308,17 +312,8 @@ li p {
     max-width: 100%;
 }
 
-/* Code Copy Button */
+/* Code Block Styling */
 pre { position: relative; }
-.copy-btn {
-    position: absolute; top: 8px; right: 8px;
-    padding: 4px 8px; background: rgba(255, 255, 255, 0.1);
-    color: var(--muted); border: 1px solid var(--line);
-    border-radius: 4px; font-size: 12px; cursor: pointer;
-    transition: all 0.2s; opacity: 0;
-}
-pre:hover .copy-btn { opacity: 1; }
-.copy-btn:hover { background: var(--brand-pale); color: var(--brand); border-color: var(--brand); }
 
 /* Mobile Overlay */
 .mobile-overlay {
@@ -2439,21 +2434,22 @@ if (mainContentImages.length > 0) {
     });
 }
 
-// Code Copy Button
-document.querySelectorAll('pre').forEach(pre => {
-    const btn = document.createElement('button');
-    btn.className = 'copy-btn';
-    btn.textContent = 'Copy';
-    pre.appendChild(btn);
-    
-    btn.addEventListener('click', async () => {
-        const code = pre.querySelector('code');
-        if (code) {
-            await navigator.clipboard.writeText(code.innerText);
-            btn.textContent = 'Copied!';
-            setTimeout(() => btn.textContent = 'Copy', 2000);
-        }
-    });
+// Security & Anti-Scraping Measures
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('copy', e => {
+    e.preventDefault();
+    e.clipboardData.setData('text/plain', '本文内容受版权保护，禁止复制。');
+});
+document.addEventListener('cut', e => e.preventDefault());
+document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+    if (e.keyCode === 123 || 
+       (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || 
+       (e.ctrlKey && e.keyCode === 85) ||
+       (e.metaKey && e.altKey && e.keyCode === 73)) {
+        e.preventDefault();
+    }
 });
 
 // Mobile TOC Toggle

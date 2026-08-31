@@ -1,0 +1,8 @@
+# 迁移输入快照：可由 dingnei/index.html + assets/ 随时重建，不入库
+# 重建命令：python3 tools/migrate.py --snapshot
+tools/data/dingnei_source.html
+
+# 缓存与依赖
+__pycache__/
+node_modules/
+.DS_Store

@@ -7,7 +7,15 @@ const path = require('path');
 const { JSDOM, VirtualConsole } = require('jsdom');
 
 const ROOT = path.dirname(__dirname);  // 仓库根目录（本脚本位于 tools/）
-const PAGES = ['index.html', 'dingnei/index.html', 'sunyuchen/index.html'];
+
+// 话题目录自动发现：加新话题后本测试无需改动
+const SKIP_DIRS = new Set(['assets', 'tools', 'node_modules', '.git', '.github']);
+const TOPIC_DIRS = fs.readdirSync(ROOT, { withFileTypes: true })
+    .filter(d => d.isDirectory() && !SKIP_DIRS.has(d.name)
+                 && fs.existsSync(path.join(ROOT, d.name, 'index.html')))
+    .map(d => d.name);
+const PAGES = ['index.html', ...TOPIC_DIRS.map(d => `${d}/index.html`)];
+console.log(`发现话题 ${TOPIC_DIRS.length} 个：${TOPIC_DIRS.join(', ')}`);
 
 let failed = 0;
 const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) failed++; return !!c; };
@@ -74,7 +82,8 @@ for (const p of PAGES) {
 
     ok(!!doc.getElementById('topicToggle') && !!doc.getElementById('topicDropdown'), '话题切换器就位');
     const topics = doc.querySelectorAll('.topic-item:not(.home)');
-    ok(topics.length === 2, `话题条目 2 个（实际 ${topics.length}）`);
+    ok(topics.length === TOPIC_DIRS.length,
+        `话题条目 ${TOPIC_DIRS.length} 个（实际 ${topics.length}）`);
     ok(!!doc.querySelector('.topic-item.home'), '含「返回话题首页」入口');
     const cur = doc.querySelectorAll('.topic-item.current');
     ok(cur.length === 1, `current 标记唯一（${cur.length}）→ ` + (cur[0] ? cur[0].getAttribute('href') : '无'));
@@ -111,12 +120,14 @@ for (const p of PAGES) {
     dom.window.close();
 }
 
-// 三页必须引用同一个图标文件（避免各页各存一份）
+// 所有页面必须引用同一个图标文件（避免各页各存一份）
 console.log('\n──── 品牌图标跨页一致性 ────');
 {
     const refs = PAGES.map(p => brandRefs[p]).filter(Boolean);
-    ok(refs.length === PAGES.length, `三页都解析到图标引用（${refs.length}/${PAGES.length}）`);
-    ok(new Set(refs).size === 1, `三页共用同一图标文件 → ${[...new Set(refs)].join(', ')}`);
+    ok(refs.length === PAGES.length,
+        `${PAGES.length} 个页面都解析到图标引用（${refs.length}/${PAGES.length}）`);
+    ok(new Set(refs).size === 1,
+        `所有页面共用同一图标文件 → ${[...new Set(refs)].join(', ')}`);
 }
 
 // 单独验证 reader.js 里确实挂了内容保护

@@ -35,9 +35,9 @@ DATA = "tools/data"
 # 公共资产（assets/）是唯一真源；tools/data/ 只放「话题专属内容」和「公共样式的扩展段」，
 # 避免同一份 reader.js 存两处、日后改一处忘一处。
 CSS_EXT = open(f"{DATA}/theme_ext.css", encoding="utf-8").read()
-SUNY_BODY = open(f"{DATA}/sunyuchen_body.html", encoding="utf-8").read()
-SUNY_OVR = open(f"{DATA}/sunyuchen_override.css", encoding="utf-8").read()
 HOME_BODY = open(f"{DATA}/home_body.html", encoding="utf-8").read()
+# 各话题的正文 / 主题覆盖由 build_topic_page() 按 slug 约定读取（tools/data/<slug>_body.html、
+# <slug>_override.css），这里不硬编码任何具体话题，加话题时本文件不用改。
 
 # ---------------------------------------------------------------- 品牌图标（源驱动）
 # 设计原则：图标的「形状」与「配色」一律从源文件抽取，脚本只负责
@@ -130,10 +130,58 @@ def brand_data_uri():
 
 
 # ---------------------------------------------------------------- 话题配置
+# 加新话题只需两步，不用改本文件：
+#   1. 在下面的 TOPICS 里加一条
+#   2. 往 tools/data/ 放两个文件：<slug>_body.html（必需）、<slug>_override.css（可选，主题色覆盖）
+# 目录名 <slug> 就是访问路径，例如 slug="xyz" → /xyz/
+#
+# 注意：TOPICS[0] 是「源话题」，它的正文来自迁移快照（原始单文件页面），
+# 其余话题都以它生成的页面为模板换掉正文。所以删除 TOPICS[0] 会让脚本失去模板来源。
 TOPICS = [
-    {"slug": "dingnei",   "label": "阿里巴巴 · 内网风暴", "sub": "钉钉离职长文全编", "color": "#ff6b00"},
-    {"slug": "sunyuchen", "label": "孙宇晨 · 我的女友景甜", "sub": "长文精校与事件全貌", "color": "#C0392B"},
+    {
+        "slug": "dingnei",
+        "label": "阿里巴巴 · 内网风暴",      # 切换器标题
+        "sub": "钉钉离职长文全编",           # 切换器副标题
+        "color": "#ff6b00",                 # 主题色（切换器圆点 + 首页卡片）
+        "title": "大厂八卦 · 阿里巴巴",      # 浏览器标签 + 顶栏站名
+        "kicker": "话 题 一",               # 首页卡片眉标
+        "desc": "2025 年阿里内网一篇离职长文引发的连锁反应。收录「置身钉内」「置身钉外」等 5 篇原文、官方回应与收官篇，附名物注释与完整事件时间线。",
+        "tags": ["<b>5</b> 篇长文", "约 <b>8.9 万</b> 字", "含官方回应", "名物注释"],
+    },
+    {
+        "slug": "sunyuchen",
+        "label": "孙宇晨 · 我的女友景甜",
+        "sub": "长文精校与事件全貌",
+        "color": "#C0392B",
+        "title": "大厂八卦 · 我的女友景甜",
+        "kicker": "话 题 二",
+        "desc": "2026 年孙宇晨发布的长文，以及事件双方表态、公开信息比对与时间线梳理。全文六章精校，逐处标注可核查、不可核查与已被证伪的细节。",
+        "tags": ["<b>6</b> 章正文", "约 <b>7.8 千</b> 字", "可信度校注", "双方表态对照"],
+    },
 ]
+SOURCE_TOPIC = TOPICS[0]      # 正文来自迁移快照的那个话题
+SITE_NAME = "大厂八卦"
+
+
+def topic_card(t):
+    """首页话题卡片（由 TOPICS 配置生成，不再手写 HTML）"""
+    tags = "".join(f'\n                    <span class="tc-tag">{x}</span>' for x in t["tags"])
+    return (f'            <a href="./{t["slug"]}/" class="topic-card" style="--tc:{t["color"]}">\n'
+            f'                <div class="tc-top">\n'
+            f'                    <span class="tc-dot"></span>\n'
+            f'                    <span class="tc-kicker">{t["kicker"]}</span>\n'
+            f'                </div>\n'
+            f'                <h2>{t["label"]}</h2>\n'
+            f'                <p class="tc-desc">{t["desc"]}</p>\n'
+            f'                <div class="tc-meta">{tags}\n'
+            f'                </div>\n'
+            f'            </a>\n')
+
+
+def topic_grid():
+    """首页话题卡片网格。注意：不带末尾换行，由 home_body.html 里占位符那一行提供。"""
+    cards = [topic_card(t) for t in TOPICS]
+    return '        <div class="topic-grid">\n' + "\n".join(cards) + '        </div>'
 
 def topic_switcher(current):
     """生成话题切换器（下拉面板）。current 为空表示在首页。"""
@@ -230,7 +278,9 @@ print(f"assets/theme.css  {os.path.getsize('assets/theme.css')} bytes")
 print(f"assets/reader.js  {os.path.getsize('assets/reader.js')} bytes")
 
 
-# ================================================================ 2. dingnei
+# ================================================================ 2. 源话题页
+# 它的正文来自迁移快照（原始单文件页面），也是其余话题页的模板来源。
+slug0 = SOURCE_TOPIC["slug"]
 h = src
 h = re.sub(r"<style[^>]*>.*?</style>", '<link rel="stylesheet" href="../assets/theme.css">', h, count=1, flags=re.S)
 # 只替换页面末尾那个主脚本（保留 body 开头的防闪烁内联脚本）
@@ -238,35 +288,18 @@ last = h.rfind("<script>")
 h = h[:last] + '<script src="../assets/reader.js"></script>\n</body>\n</html>\n'
 h = re.sub(r'<link rel="icon"[^>]*>', lambda m: brand_favicon("../"), h, count=1)
 h = re.sub(r'<img class="logo-icon"[^>]*>', lambda m: brand_img("../"), h, count=1)
-h = h.replace('<div class="controls">\n', '<div class="controls">\n' + topic_switcher("dingnei"), 1)
+h = h.replace('<div class="controls">\n', '<div class="controls">\n' + topic_switcher(slug0), 1)
 
-os.makedirs("dingnei", exist_ok=True)
-open("dingnei/index.html", "w", encoding="utf-8").write(h)
-print(f"dingnei/index.html  {os.path.getsize('dingnei/index.html')} bytes")
+os.makedirs(slug0, exist_ok=True)
+open(f"{slug0}/index.html", "w", encoding="utf-8").write(h)
+print(f"{slug0}/index.html  {os.path.getsize(slug0 + '/index.html')} bytes")
 assert '<style' not in h, "仍有内联 style"
 assert len(re.findall(r'class="topic-item[^"]*current"', h)) == 1
 
 
-# ================================================================ 3. sunyuchen
-s = h
-# 3.1 正文
-m = re.search(r'<main class="main-content"[^>]*>', s)
-start = m.end()
-tag_re = re.compile(r"<(/?)(main|div|section|article)\b[^>]*>")
-stack, end = [], None
-for t in tag_re.finditer(s, start):
-    if t.group(1):
-        if stack and stack[-1] == t.group(2):
-            stack.pop()
-        if not stack:
-            end = t.start()   # finditer 返回的是绝对索引，不能再加 start
-            break
-    else:
-        stack.append(t.group(2))
-s = s[:start] + "\n" + SUNY_BODY + "\n        " + s[end:]
-
-# 3.2 目录容器清空 → reader.js 自动生成
+# ================================================================ 3. 其余话题页
 def empty_toc(x):
+    """清空目录容器 → 交给 reader.js 按本页标题自动生成（否则会继承源话题的目录）"""
     mm = re.search(r'<div id="toc-container"\s*>', x)
     if not mm:
         return x
@@ -283,25 +316,72 @@ def empty_toc(x):
             depth += 1
     return (x[:st] + "\n            \n            " + x[ed:]) if ed else x
 
-s = empty_toc(s)
 
-# 3.3 主题覆盖 + 图标换色
-s = s.replace('<link rel="stylesheet" href="../assets/theme.css">',
-              '<link rel="stylesheet" href="../assets/theme.css">\n    <style>\n' + SUNY_OVR + "\n    </style>", 1)
-# 图标不再逐话题换色：三页共用 assets/brand.*（见 extract_brand_asset 注释）
-s = s.replace("<title>大厂八卦 · 阿里巴巴</title>", "<title>大厂八卦 · 我的女友景甜</title>")
-s = s.replace("                大厂八卦 · 阿里巴巴\n", "                大厂八卦 · 我的女友景甜\n")
-s = s.replace('<a href="../dingnei/" class="topic-item current">', '<a href="../dingnei/" class="topic-item">')
-s = s.replace('<a href="../sunyuchen/" class="topic-item">', '<a href="../sunyuchen/" class="topic-item current">')
+def replace_main(x, body):
+    """用 body 换掉 <main class="main-content"> 的内容（标签栈精确定位结束位置）"""
+    m = re.search(r'<main class="main-content"[^>]*>', x)
+    start = m.end()
+    tag_re = re.compile(r"<(/?)(main|div|section|article)\b[^>]*>")
+    stack, end = [], None
+    for t in tag_re.finditer(x, start):
+        if t.group(1):
+            if stack and stack[-1] == t.group(2):
+                stack.pop()
+            if not stack:
+                end = t.start()   # finditer 返回的是绝对索引，不能再加 start
+                break
+        else:
+            stack.append(t.group(2))
+    return x[:start] + "\n" + body + "\n        " + x[end:]
 
-os.makedirs("sunyuchen", exist_ok=True)
-open("sunyuchen/index.html", "w", encoding="utf-8").write(s)
-print(f"sunyuchen/index.html  {os.path.getsize('sunyuchen/index.html')} bytes")
-assert len(re.findall(r'class="topic-item[^"]*current"', s)) == 1
-toc_html = re.search(r'<div id="toc-container"\s*>(.*?)</div>\s*</aside>', s, re.S).group(1)
-assert "<a" not in toc_html, "目录容器未清空（会继承上一篇的目录）"
-assert re.search(r'<main class="main-content"[^>]*>.*</main>', s, re.S), "正文 main 结构被破坏"
-assert 'src="../assets/reader.js"' in s, "reader.js 引用丢失"
+
+def build_topic_page(tpl, cfg):
+    """以源话题页为模板生成一个话题页。加新话题时不需要改这个函数。"""
+    slug = cfg["slug"]
+    body_path = f"{DATA}/{slug}_body.html"
+    if not os.path.exists(body_path):
+        raise SystemExit(f"缺少话题正文 {body_path}（新增话题时要在 tools/data/ 放这个文件）")
+    body = open(body_path, encoding="utf-8").read()
+    ovr_path = f"{DATA}/{slug}_override.css"
+    ovr = open(ovr_path, encoding="utf-8").read() if os.path.exists(ovr_path) else None
+
+    s = replace_main(tpl, body)
+    s = empty_toc(s)
+
+    # 主题色覆盖（可选：只覆盖 CSS 变量，公共样式不动）
+    if ovr:
+        s = s.replace('<link rel="stylesheet" href="../assets/theme.css">',
+                      '<link rel="stylesheet" href="../assets/theme.css">\n    <style>\n' + ovr + "\n    </style>", 1)
+    # 图标不逐话题换色：三页共用 assets/brand.*（见 extract_brand_asset 注释）
+
+    # 标题：浏览器标签 + 顶栏站名
+    s = re.sub(r"<title>.*?</title>", lambda m: f"<title>{cfg['title']}</title>", s, count=1)
+    mark = f"                {SOURCE_TOPIC['title']}\n"
+    if mark not in s:
+        raise SystemExit(f"{slug}: 模板里找不到顶栏站名（缩进变了？）→ {mark!r}")
+    s = s.replace(mark, f"                {cfg['title']}\n", 1)
+
+    # 切换器的 current 标记移到本话题
+    for t in TOPICS:
+        s = s.replace(f'<a href="../{t["slug"]}/" class="topic-item current">',
+                      f'<a href="../{t["slug"]}/" class="topic-item">')
+    s = s.replace(f'<a href="../{slug}/" class="topic-item">',
+                  f'<a href="../{slug}/" class="topic-item current">')
+
+    os.makedirs(slug, exist_ok=True)
+    open(f"{slug}/index.html", "w", encoding="utf-8").write(s)
+
+    assert len(re.findall(r'class="topic-item[^"]*current"', s)) == 1, f"{slug}: current 标记不唯一"
+    toc_html = re.search(r'<div id="toc-container"\s*>(.*?)</div>\s*</aside>', s, re.S).group(1)
+    assert "<a" not in toc_html, f"{slug}: 目录容器未清空（会继承源话题的目录）"
+    assert re.search(r'<main class="main-content"[^>]*>.*</main>', s, re.S), f"{slug}: 正文 main 结构被破坏"
+    assert 'src="../assets/reader.js"' in s, f"{slug}: reader.js 引用丢失"
+    print(f"{slug}/index.html  {os.path.getsize(slug + '/index.html')} bytes")
+    return s
+
+
+for cfg in TOPICS[1:]:
+    build_topic_page(h, cfg)
 
 
 # ================================================================ 4. 首页
@@ -364,9 +444,12 @@ home = home.replace("__ICON__", brand_img("./"))
 sw = topic_switcher(None).replace('href="../', 'href="./').replace('"../"', '"./"')
 home = home.replace("__SWITCHER__", sw)
 home = home.replace("__HOME_BODY__", HOME_BODY)
+home = home.replace("__TOPIC_GRID__", topic_grid())   # 必须在 HOME_BODY 之后，占位符在它里面
 open("index.html", "w", encoding="utf-8").write(home)
 print(f"index.html（首页）  {os.path.getsize('index.html')} bytes")
 assert len(re.findall(r'class="topic-item[^"]*current"', home)) == 1
-assert home.count('href="./dingnei/"') == 2, "首页话题卡片/切换器链接数不对"
+for t in TOPICS:
+    # 每个话题在首页出现两次：卡片 + 切换器
+    assert home.count(f'href="./{t["slug"]}/"') == 2, f'首页链接数不对：{t["slug"]}'
 
 print("\n全部生成完成。")

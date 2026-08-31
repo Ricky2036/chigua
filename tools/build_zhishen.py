@@ -31,8 +31,8 @@ def parse_markdown_blocks(md_text):
     """
     高保真轻量 Markdown 解析器：
     - 精确按空行划分段落 <p>，单行自然段均作为独立 <p>
+    - 列表支持多行与松散列表（跳过空行保持同一个 <ol>/<ul>），杜绝断裂成多个孤立 <ol>
     - 标题 # / ## / ###
-    - 列表 - / 1.
     - 引用 >
     - 行内 **加粗**
     """
@@ -78,40 +78,75 @@ def parse_markdown_blocks(md_text):
             html_out.append(f"<blockquote>{qcontent}</blockquote>")
             continue
             
-        # 有序列表
+        # 有序列表（支持跨空行的连续条目）
         if re.match(r"^\d+\.\s", line):
             items = []
             while i < len(lines):
                 curr = lines[i].strip()
                 if not curr:
-                    break
+                    # 窥探后续非空行是否依然为数字列表项
+                    j = i + 1
+                    has_more = False
+                    while j < len(lines):
+                        if not lines[j].strip():
+                            j += 1
+                            continue
+                        if re.match(r"^\d+\.\s", lines[j].strip()):
+                            has_more = True
+                        break
+                    if has_more:
+                        i = j
+                        continue
+                    else:
+                        break
+
                 m = re.match(r"^\d+\.\s*(.*)", curr)
                 if m:
                     item_text = m.group(1)
                     item_text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", item_text)
                     items.append(f"<li>{item_text}</li>")
-                elif items:
+                elif items and not curr.startswith("#"):
                     items[-1] = items[-1][:-5] + "<br>" + re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", curr) + "</li>"
+                else:
+                    break
                 i += 1
-            html_out.append(f'<ol class="zp-list">\n' + "\n".join(items) + "\n</ol>")
+            if items:
+                html_out.append(f'<ol class="zp-list">\n' + "\n".join(items) + "\n</ol>")
             continue
 
-        # 无序列表
+        # 无序列表（支持跨空行的连续条目）
         if line.startswith("- ") or line.startswith("* "):
             items = []
             while i < len(lines):
                 curr = lines[i].strip()
                 if not curr:
-                    break
+                    j = i + 1
+                    has_more = False
+                    while j < len(lines):
+                        if not lines[j].strip():
+                            j += 1
+                            continue
+                        if lines[j].strip().startswith("- ") or lines[j].strip().startswith("* "):
+                            has_more = True
+                        break
+                    if has_more:
+                        i = j
+                        continue
+                    else:
+                        break
+
                 m = re.match(r"^[-*]\s*(.*)", curr)
                 if m:
                     item_text = m.group(1)
                     item_text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", item_text)
                     items.append(f"<li>{item_text}</li>")
-                elif items:
+                elif items and not curr.startswith("#"):
                     items[-1] = items[-1][:-5] + "<br>" + re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", curr) + "</li>"
+                else:
+                    break
                 i += 1
-            html_out.append(f'<ul class="zp-list">\n' + "\n".join(items) + "\n</ul>")
+            if items:
+                html_out.append(f'<ul class="zp-list">\n' + "\n".join(items) + "\n</ul>")
             continue
 
         # 普通自然段落（单段收集）
@@ -216,6 +251,9 @@ parts.append(article(
 
 # ---------------------------------------------------------------- 2、置身米内
 minei_md = read("zhishen_minei_original.md")
+# 去掉非正文的“补充说明”
+if "## 补充说明" in minei_md:
+    minei_md = minei_md.split("## 补充说明")[0]
 minei_html = parse_markdown_blocks(minei_md)
 minei_html = re.sub(r"<h1>.*?</h1>", "", minei_html, flags=re.S)
 minei_html = demote(minei_html, 3, 2)

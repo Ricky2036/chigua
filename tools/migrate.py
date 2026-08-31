@@ -141,10 +141,10 @@ TOPICS = [
     {
         "slug": "dingnei",
         "label": "阿里巴巴 · 内网风暴",      # 切换器标题
-        "sub": "钉钉离职长文全编",           # 切换器副标题
+        "sub": "钉钉离职长文全编",           # 首页条目副标题
         "color": "#ff6b00",                 # 主题色（切换器圆点 + 首页卡片）
-        "title": "大厂八卦 · 阿里巴巴",      # 浏览器标签 + 顶栏站名
-        "kicker": "话 题 一",               # 首页卡片眉标
+        "title": "阿里巴巴 · 内网风暴",      # 浏览器标签标题
+        "kicker": "话 题 一",               # 首页条目眉标
         "desc": "2025 年阿里内网一篇离职长文引发的连锁反应。收录「置身钉内」「置身钉外」等 5 篇原文、官方回应与收官篇，附名物注释与完整事件时间线。",
         "tags": ["<b>5</b> 篇长文", "约 <b>8.9 万</b> 字", "含官方回应", "名物注释"],
     },
@@ -153,14 +153,14 @@ TOPICS = [
         "label": "孙宇晨 · 我的女友景甜",
         "sub": "长文精校与事件全貌",
         "color": "#C0392B",
-        "title": "大厂八卦 · 我的女友景甜",
+        "title": "孙宇晨 · 我的女友景甜",
         "kicker": "话 题 二",
-        "desc": "2026 年孙宇晨发布的长文，以及事件双方表态、公开信息比对与时间线梳理。全文六章精校，逐处标注可核查、不可核查与已被证伪的细节。",
-        "tags": ["<b>6</b> 章正文", "约 <b>7.8 千</b> 字", "可信度校注", "双方表态对照"],
+        "desc": "2026 年孙宇晨发布的长文，以及事件双方表态、公开信息比对与时间线梳理。全文七部分精校，逐处标注可核查、不可核查与已被证伪的细节。",
+        "tags": ["<b>7</b> 部分正文", "约 <b>7.8 千</b> 字", "名物注释", "双方表态对照"],
     },
 ]
 SOURCE_TOPIC = TOPICS[0]      # 正文来自迁移快照的那个话题
-SITE_NAME = "大厂八卦"
+SITE_NAME = "理性吃瓜"
 
 
 def topic_card(t, idx):
@@ -192,7 +192,7 @@ def topic_switcher(current):
         items.append(
             f'<a href="../{t["slug"]}/" class="{cls}">'
             f'<span class="dot" style="background:{t["color"]}"></span>'
-            f'<span class="txt">{t["label"]}<span class="sub">{t["sub"]}</span></span></a>'
+            f'<span class="txt">{t["label"]}</span></a>'
         )
     home_cls = "topic-item home current" if not current else "topic-item home"
     return f'''            <!-- topic-switch:begin -->
@@ -293,9 +293,11 @@ last = h.rfind("<script>")
 h = h[:last] + '<script src="../assets/reader.js"></script>\n</body>\n</html>\n'
 h = re.sub(r'<link rel="icon"[^>]*>', lambda m: brand_favicon("../"), h, count=1)
 h = re.sub(r'<img class="logo-icon"[^>]*>', lambda m: brand_img("../"), h, count=1)
-# 顶栏站名统一为站点名（与首页一致）；<title> 保留话题区分
+# 标题：浏览器标签设置为话题标题
+h = re.sub(r"<title>.*?</title>", lambda m: f"<title>{SOURCE_TOPIC['title']}</title>", h, count=1)
+# 顶栏标题显示为该话题名称（与切换器一致）
 h = re.sub(r'(<img class="logo-icon"[^>]*>\n\s+)[^\n<]+(\n\s*</div>)',
-           lambda m: m.group(1) + SITE_NAME + m.group(2), h, count=1)
+           lambda m: m.group(1) + SOURCE_TOPIC["label"] + m.group(2), h, count=1)
 h = h.replace('<div class="controls">\n', '<div class="controls">\n' + topic_switcher(slug0), 1)
 
 os.makedirs(slug0, exist_ok=True)
@@ -303,8 +305,7 @@ open(f"{slug0}/index.html", "w", encoding="utf-8").write(h)
 print(f"{slug0}/index.html  {os.path.getsize(slug0 + '/index.html')} bytes")
 assert '<style' not in h, "仍有内联 style"
 assert len(re.findall(r'class="topic-item[^"]*current"', h)) == 1
-assert SITE_NAME in h and f"{SOURCE_TOPIC['title']}\n" not in h.replace(f"<title>{SOURCE_TOPIC['title']}</title>", ""), \
-    "dingnei 顶栏站名未统一为站点名"
+assert SOURCE_TOPIC["label"] in h, "dingnei 顶栏标题未设置为话题名称"
 
 
 # ================================================================ 3. 其余话题页
@@ -364,11 +365,12 @@ def build_topic_page(tpl, cfg):
                       '<link rel="stylesheet" href="../assets/theme.css">\n    <style>\n' + ovr + "\n    </style>", 1)
     # 图标不逐话题换色：三页共用 assets/brand.*（见 extract_brand_asset 注释）
 
-    # 标题：浏览器标签保留话题区分；顶栏站名统一为站点名（模板已是 SITE_NAME）
+    # 标题：浏览器标签保留话题区分；顶栏标题设置为本话题名称（与切换器一致）
     s = re.sub(r"<title>.*?</title>", lambda m: f"<title>{cfg['title']}</title>", s, count=1)
-    mark = f"                {SITE_NAME}\n"
+    mark = f"                {SOURCE_TOPIC['label']}\n"
     if mark not in s:
-        raise SystemExit(f"{slug}: 模板里找不到顶栏站名（缩进变了？）→ {mark!r}")
+        raise SystemExit(f"{slug}: 模板里找不到顶栏标题（缩进变了？）→ {mark!r}")
+    s = s.replace(mark, f"                {cfg['label']}\n", 1)
 
     # 切换器的 current 标记移到本话题
     for t in TOPICS:
@@ -399,7 +401,7 @@ home = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大厂八卦 · 原文汇编</title>
+    <title>理性吃瓜 · 原文汇编</title>
     <meta name="description" content="互联网公开长文的精校汇编：阿里钉钉内网离职长文全编、孙宇晨《我的女友景甜》精校版。">
     __FAVICON__
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -428,7 +430,7 @@ home = '''<!DOCTYPE html>
         <div class="topbar-inner">
             <div class="logo">
                 __ICON__
-                大厂八卦
+                理性吃瓜
             </div>
             <div class="controls">
                 __SWITCHER__

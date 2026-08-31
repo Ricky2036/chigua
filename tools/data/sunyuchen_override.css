@@ -18,41 +18,12 @@
             /* 公共 CSS 里硬编码的橙色阴影，本话题一并换成朱砂红 */
         .back-to-top { box-shadow: 0 4px 14px rgba(192,57,43,0.35); }
             .logo-icon { filter: drop-shadow(0 2px 5px rgba(192,57,43,0.32)); }
+            h1 { border-bottom-color: var(--brand); }
             h2 { border-bottom-color: rgba(192,57,43,0.4); }
-            /* 六章降为 h3 后加一道朱砂红左标，长文里仍然好扫读 */
-        h3 { padding-left: 11px; border-left: 3px solid var(--brand); margin-top: 2em; }
-            /* 一级目录紧跟首个章节时收紧，否则 h2/h3 的 margin 叠加显得松散 */
-        h2 + h3 { margin-top: 1.2em; }
+            /* 一级目录紧跟首个章节时收紧，避免 margin 叠加显得松散 */
+            h1 + h2 { margin-top: 1.4em; }
 
         /* ---- 本话题专属组件 ---- */
-        .essay-stats {
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 10px; margin: 0 0 26px;
-        }
-        .es-stat {
-            background: var(--card); border: 1px solid var(--line);
-            border-radius: 12px; padding: 15px 10px; text-align: center;
-            box-shadow: var(--shadow-sm);
-        }
-        .es-stat b {
-            display: block; font-family: var(--font-sans); font-size: 22px;
-            font-weight: 700; color: var(--brand); line-height: 1.2;
-        }
-        .es-stat b em { font-style: normal; font-size: 13px; margin-left: 1px; }
-        .es-stat span {
-            display: block; margin-top: 6px; font-family: var(--font-sans);
-            font-size: 11.5px; color: var(--muted); line-height: 1.5;
-        }
-        .essay-notice {
-            margin: 0 0 30px; padding: 15px 20px; border-radius: 12px;
-            background: var(--brand-light); border: 1px solid var(--brand-pale);
-            font-family: var(--font-sans); font-size: 13px; line-height: 1.85;
-            color: var(--ink);
-        }
-        .essay-notice b { display: block; margin-bottom: 5px; color: var(--brand); }
-        .essay-notice ul { margin: 0; padding-left: 18px; }
-        .essay-notice li { margin: 2px 0; }
-
         .anno {
             border-bottom: 1px dashed var(--muted); cursor: help; position: relative;
         }
@@ -71,15 +42,15 @@
 
         .essay-finale {
             margin: 34px 0; padding: 22px; text-align: center;
-            border: 1px solid var(--line); border-radius: 12px;
+            border: none; border-radius: 12px;
             background: var(--brand-pale);
         }
         .essay-finale p { margin: 0; font-size: 13px; letter-spacing: .1em; color: var(--brand); }
 
         .versus { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 26px; }
         .vs {
-            padding: 18px 20px; border-radius: 12px;
-            background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+            padding: 20px 22px; border-radius: 12px;
+            background: var(--card); border: none; box-shadow: var(--shadow-sm);
         }
         .vs .who {
             display: flex; align-items: center; gap: 8px; margin-bottom: 11px;
@@ -106,7 +77,6 @@
             width: 7px; height: 7px; border-radius: 50%;
             background: var(--card); border: 1.5px solid var(--muted);
         }
-        .tl li.key::before { background: var(--brand); border-color: var(--brand); }
         .tl li b {
             font-family: var(--font-sans); font-size: 12.5px;
             color: var(--ink); margin-right: 8px;

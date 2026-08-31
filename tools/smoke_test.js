@@ -88,10 +88,15 @@ for (const p of PAGES) {
     const cur = doc.querySelectorAll('.topic-item.current');
     ok(cur.length === 1, `current 标记唯一（${cur.length}）→ ` + (cur[0] ? cur[0].getAttribute('href') : '无'));
 
-    // 页脚已全局移除；顶栏站名统一为「大厂八卦」（<title> 仍保留话题区分）
+    // 页脚已全局移除；顶栏标题：首页为「理性吃瓜」，话题页与切换器显示一致
     ok(!doc.querySelector('.site-footer'), '无 site-footer 页脚');
     const logoText = (doc.querySelector('.topbar .logo')?.textContent || '').trim();
-    ok(logoText === '大厂八卦', `顶栏站名与首页一致（${logoText}）`);
+    if (p === 'index.html') {
+        ok(logoText === '理性吃瓜', `首页顶栏站名正确（${logoText}）`);
+    } else {
+        const curTopic = doc.querySelector('.topic-item.current .txt')?.textContent.trim();
+        ok(logoText === curTopic, `子页顶栏标题与切换器一致（${logoText} vs ${curTopic}）`);
+    }
     ok(!!doc.querySelector('title'), 'title 标签存在');
 
     // 各页品牌与资源

@@ -245,6 +245,10 @@ if not os.path.exists(SOURCE):
     sys.exit(f"缺少迁移输入快照 {SOURCE}\n请先执行：python3 tools/migrate.py --snapshot")
 src = open(SOURCE, encoding="utf-8").read()
 assert "<main class=\"main-content\"" in src, "快照不是完整文章页，拒绝继续"
+# 页脚（site-footer）是站点装饰，不属于迁移正文，三个页面统一去掉
+# （样式表里的 .site-footer 死规则无害，仅剥离 HTML 结构）
+src = re.sub(r'\n?\s*<footer class="site-footer">.*?</footer>', "", src, count=1, flags=re.S)
+assert '<footer class="site-footer">' not in src, "快照 footer 未剥离干净"
 style = re.findall(r"<style[^>]*>(.*?)</style>", src, re.S)[0]
 scripts = re.findall(r"<script>(.*?)</script>", src, re.S)
 main_js = scripts[-1]
@@ -289,6 +293,9 @@ last = h.rfind("<script>")
 h = h[:last] + '<script src="../assets/reader.js"></script>\n</body>\n</html>\n'
 h = re.sub(r'<link rel="icon"[^>]*>', lambda m: brand_favicon("../"), h, count=1)
 h = re.sub(r'<img class="logo-icon"[^>]*>', lambda m: brand_img("../"), h, count=1)
+# 顶栏站名统一为站点名（与首页一致）；<title> 保留话题区分
+h = re.sub(r'(<img class="logo-icon"[^>]*>\n\s+)[^\n<]+(\n\s*</div>)',
+           lambda m: m.group(1) + SITE_NAME + m.group(2), h, count=1)
 h = h.replace('<div class="controls">\n', '<div class="controls">\n' + topic_switcher(slug0), 1)
 
 os.makedirs(slug0, exist_ok=True)
@@ -296,6 +303,8 @@ open(f"{slug0}/index.html", "w", encoding="utf-8").write(h)
 print(f"{slug0}/index.html  {os.path.getsize(slug0 + '/index.html')} bytes")
 assert '<style' not in h, "仍有内联 style"
 assert len(re.findall(r'class="topic-item[^"]*current"', h)) == 1
+assert SITE_NAME in h and f"{SOURCE_TOPIC['title']}\n" not in h.replace(f"<title>{SOURCE_TOPIC['title']}</title>", ""), \
+    "dingnei 顶栏站名未统一为站点名"
 
 
 # ================================================================ 3. 其余话题页
@@ -355,12 +364,11 @@ def build_topic_page(tpl, cfg):
                       '<link rel="stylesheet" href="../assets/theme.css">\n    <style>\n' + ovr + "\n    </style>", 1)
     # 图标不逐话题换色：三页共用 assets/brand.*（见 extract_brand_asset 注释）
 
-    # 标题：浏览器标签 + 顶栏站名
+    # 标题：浏览器标签保留话题区分；顶栏站名统一为站点名（模板已是 SITE_NAME）
     s = re.sub(r"<title>.*?</title>", lambda m: f"<title>{cfg['title']}</title>", s, count=1)
-    mark = f"                {SOURCE_TOPIC['title']}\n"
+    mark = f"                {SITE_NAME}\n"
     if mark not in s:
         raise SystemExit(f"{slug}: 模板里找不到顶栏站名（缩进变了？）→ {mark!r}")
-    s = s.replace(mark, f"                {cfg['title']}\n", 1)
 
     # 切换器的 current 标记移到本话题
     for t in TOPICS:
@@ -400,7 +408,6 @@ home = '''<!DOCTYPE html>
     <link rel="stylesheet" href="./assets/theme.css">
     <style>
         .back-to-top { box-shadow: 0 4px 14px rgba(26,26,46,.28); }
-        .footer-divider { background: linear-gradient(90deg, #ff6b00, #C0392B); width: 56px; }
     </style>
 </head>
 <body>
@@ -430,11 +437,6 @@ home = '''<!DOCTYPE html>
     </div>
 
 __HOME_BODY__
-    <footer class="site-footer">
-        <div class="footer-divider"></div>
-        <p>本文内容来源于网络公开资料，仅供学习交流使用</p>
-        <p style="margin-top: 6px; opacity: 0.7;">Lovingly typeset · 2026</p>
-    </footer>
 
     <script src="./assets/reader.js"></script>
 </body>
@@ -449,6 +451,7 @@ home = home.replace("__TOPIC_GRID__", topic_grid())   # 必须在 HOME_BODY 之�
 open("index.html", "w", encoding="utf-8").write(home)
 print(f"index.html（首页）  {os.path.getsize('index.html')} bytes")
 assert len(re.findall(r'class="topic-item[^"]*current"', home)) == 1
+assert "site-footer" not in home, "首页 footer 未删除"
 for t in TOPICS:
     # 每个话题在首页出现两次：卡片 + 切换器
     assert home.count(f'href="./{t["slug"]}/"') == 2, f'首页链接数不对：{t["slug"]}'

@@ -88,6 +88,12 @@ for (const p of PAGES) {
     const cur = doc.querySelectorAll('.topic-item.current');
     ok(cur.length === 1, `current 标记唯一（${cur.length}）→ ` + (cur[0] ? cur[0].getAttribute('href') : '无'));
 
+    // 页脚已全局移除；顶栏站名统一为「大厂八卦」（<title> 仍保留话题区分）
+    ok(!doc.querySelector('.site-footer'), '无 site-footer 页脚');
+    const logoText = (doc.querySelector('.topbar .logo')?.textContent || '').trim();
+    ok(logoText === '大厂八卦', `顶栏站名与首页一致（${logoText}）`);
+    ok(!!doc.querySelector('title'), 'title 标签存在');
+
     // 各页品牌与资源
     const pref = p === 'index.html' ? './' : '../';
     ok(html.includes(`href="${pref}assets/theme.css"`), `公共 CSS 路径正确 (${pref})`);

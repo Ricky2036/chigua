@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-生成「置身体 · 现象研究」话题页正文 tools/data/zhishen_body.html。
+生成「置身体 · 遍地开花」话题页正文 tools/data/zhishen_body.html。
 
 设计约定：
   · h1 = 篇目，h2 = 章节 —— reader.js 据此生成两级目录，sidebar 样式也只有两级

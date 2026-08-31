@@ -18,13 +18,13 @@
             /* 公共 CSS 里硬编码的橙色阴影，本话题一并换成朱砂红 */
         .back-to-top { box-shadow: 0 4px 14px rgba(192,57,43,0.35); }
             .logo-icon { filter: drop-shadow(0 2px 5px rgba(192,57,43,0.32)); }
-            
+            h2 { border-bottom-color: rgba(192,57,43,0.4); }
+            /* 六章降为 h3 后加一道朱砂红左标，长文里仍然好扫读 */
+        h3 { padding-left: 11px; border-left: 3px solid var(--brand); margin-top: 2em; }
+            /* 一级目录紧跟首个章节时收紧，否则 h2/h3 的 margin 叠加显得松散 */
+        h2 + h3 { margin-top: 1.2em; }
+
         /* ---- 本话题专属组件 ---- */
-        .essay-lead {
-            font-size: 15px; line-height: 1.85; color: var(--muted);
-            font-family: var(--font-sans); margin-bottom: 26px;
-            padding-left: 14px; border-left: 2px solid var(--brand);
-        }
         .essay-stats {
             display: grid; grid-template-columns: repeat(4, 1fr);
             gap: 10px; margin: 0 0 26px;

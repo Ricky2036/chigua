@@ -164,22 +164,25 @@ SITE_NAME = "大厂八卦"
 
 
 def topic_card(t, idx):
-    """首页话题「期号」区块（由 TOPICS 配置生成，不再手写 HTML）
+    """首页话题「目录条目」（由 TOPICS 配置生成，不再手写 HTML）
     编号 01/02 按配置顺序自动排，增删话题不用另外维护。"""
-    tags = "".join(f'<span class="ti-tag">{x}</span>' for x in t["tags"])
-    return (f'            <a href="./{t["slug"]}/" class="topic-issue" style="--tc:{t["color"]}">\n'
-            f'                <span class="ti-num">{idx + 1:02d}</span>\n'
-            f'                <div class="ti-kicker">{t["kicker"]}</div>\n'
-            f'                <h2>{t["label"]}</h2>\n'
-            f'                <p class="ti-desc">{t["desc"]}</p>\n'
-            f'                <div class="ti-tags">{tags}</div>\n'
+    tags = "".join(f'<span>{x}</span>' for x in t["tags"])
+    return (f'            <a href="./{t["slug"]}/" class="topic-row" style="--tc:{t["color"]}">\n'
+            f'                <span class="tr-num">{idx + 1:02d}</span>\n'
+            f'                <span class="tr-body">\n'
+            f'                    <span class="tr-kicker">{t["kicker"]}<i>·</i>{t["sub"]}</span>\n'
+            f'                    <h2>{t["label"]}</h2>\n'
+            f'                    <p class="tr-desc">{t["desc"]}</p>\n'
+            f'                    <span class="tr-meta">{tags}</span>\n'
+            f'                </span>\n'
+            f'                <span class="tr-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>\n'
             f'            </a>\n')
 
 
 def topic_grid():
-    """首页话题区块。注意：不带末尾换行，由 home_body.html 里占位符那一行提供。"""
+    """首页话题索引。注意：不带末尾换行，由 home_body.html 里占位符那一行提供。"""
     cards = [topic_card(t, i) for i, t in enumerate(TOPICS)]
-    return '        <div class="topic-grid">\n' + "\n".join(cards) + '        </div>'
+    return '        <div class="topic-index">\n' + "\n".join(cards) + '        </div>'
 
 def topic_switcher(current):
     """生成话题切换器（下拉面板）。current 为空表示在首页。"""

@@ -8,108 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/theme.css">
-    <style>
-
-        /* 本话题主题色：朱砂红（仅覆盖变量，公共样式不动） */
-        :root {
-            --brand: #C0392B;
-            --brand-light: #FBF0EE;
-            --brand-pale: #F7E6E2;
-            --content-bg: #FFFCFB;
-        }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --brand: #E0685A;
-                --brand-light: rgba(192,57,43,0.16);
-                --brand-pale: rgba(192,57,43,0.09);
-            }
-        }
-        .btn { border-color: rgba(192,57,43,.22); }
-        .main-content a:not(.no-style) { border-bottom-color: rgba(192,57,43,0.3); }
-            /* 公共 CSS 里硬编码的橙色阴影，本话题一并换成朱砂红 */
-        .back-to-top { box-shadow: 0 4px 14px rgba(192,57,43,0.35); }
-            .logo-icon { filter: drop-shadow(0 2px 5px rgba(192,57,43,0.32)); }
-            h1 { border-bottom-color: var(--brand); }
-            h2 { border-bottom-color: rgba(192,57,43,0.4); }
-            /* 一级目录紧跟首个章节时收紧，避免 margin 叠加显得松散 */
-            h1 + h2 { margin-top: 1.4em; }
-
-        /* ---- 本话题专属组件 ---- */
-        .anno {
-            border-bottom: 1px dashed var(--muted); cursor: help; position: relative;
-        }
-        .anno::after {
-            content: attr(data-t);
-            position: absolute; left: 50%; bottom: calc(100% + 9px);
-            transform: translateX(-50%) translateY(4px);
-            width: max-content; max-width: 260px;
-            background: var(--ink); color: var(--bg);
-            font-family: var(--font-sans); font-size: 12px; line-height: 1.65;
-            padding: 9px 12px; border-radius: 8px; white-space: normal; text-align: left;
-            opacity: 0; visibility: hidden; transition: .2s; z-index: 20;
-        }
-        .anno:hover::after { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-        .anno.show::after { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-
-        .essay-finale {
-            margin: 34px 0; padding: 22px; text-align: center;
-            border: none; border-radius: 12px;
-            background: var(--brand-pale);
-        }
-        .essay-finale p { margin: 0; font-size: 13px; letter-spacing: .1em; color: var(--brand); }
-
-        .versus { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 26px; }
-        .vs {
-            padding: 20px 22px; border-radius: 12px;
-            background: var(--card); border: none; box-shadow: var(--shadow-sm);
-        }
-        .vs .who {
-            display: flex; align-items: center; gap: 8px; margin-bottom: 11px;
-            font-family: var(--font-sans); font-size: 13px; font-weight: 700;
-        }
-        .vs .who i { width: 6px; height: 6px; border-radius: 50%; }
-        .vs-a .who i { background: var(--brand); }
-        .vs-b .who i { background: #3D6B8E; }
-        .vs .who span { color: var(--muted); font-weight: 400; font-size: 11.5px; }
-        .vs p { font-family: var(--font-sans); font-size: 13px; line-height: 1.85; }
-        .vs .src { margin-top: 10px; font-size: 11px; color: var(--muted); }
-
-        .tl { list-style: none; position: relative; padding-left: 20px; margin: 14px 0 26px; }
-        .tl::before {
-            content: ""; position: absolute; left: 4px; top: 6px; bottom: 6px;
-            width: 1px; background: var(--line);
-        }
-        .tl li {
-            position: relative; padding: 6px 0;
-            font-family: var(--font-sans); font-size: 13px; line-height: 1.75;
-        }
-        .tl li::before {
-            content: ""; position: absolute; left: -20px; top: 14px;
-            width: 7px; height: 7px; border-radius: 50%;
-            background: var(--card); border: 1.5px solid var(--muted);
-        }
-        .tl li b {
-            font-family: var(--font-sans); font-size: 12.5px;
-            color: var(--ink); margin-right: 8px;
-        }
-
-        .glossary {
-            display: grid; grid-template-columns: auto 1fr; gap: 8px 14px;
-            margin: 14px 0 10px; font-family: var(--font-sans);
-            font-size: 12.5px; line-height: 1.7;
-        }
-        .glossary dt { color: var(--brand); font-weight: 700; white-space: nowrap; }
-        .glossary dd { margin: 0; color: var(--muted); }
-
-        @media (max-width: 860px) {
-            .essay-stats { grid-template-columns: repeat(2, 1fr); }
-            .versus { grid-template-columns: 1fr; }
-            .glossary { grid-template-columns: 1fr; gap: 2px 0; }
-            .glossary dd { margin-bottom: 8px; }
-        }
-    
-    </style>
+    <link rel="stylesheet" href="../assets/theme.css?v=20260831c">
 </head>
 <body>
     <script>
@@ -517,6 +416,6 @@
         </svg>
     </button>
 
-    <script src="../assets/reader.js"></script>
+    <script src="../assets/reader.js?v=20260831c"></script>
 </body>
 </html>

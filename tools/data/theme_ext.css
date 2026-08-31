@@ -188,3 +188,8 @@
 @media (max-width: 460px) {
     .home-hero .hm-meta { flex-direction: column; align-items: flex-start; gap: 6px; }
 }
+
+/* 引用块全局样式：统一为方正直角，避免左方右圆不协调 */
+blockquote, .zp-quote-box {
+    border-radius: 0 !important;
+}

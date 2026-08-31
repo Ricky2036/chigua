@@ -185,7 +185,7 @@ strong, b {
 
 blockquote {
     border-left: 4px solid var(--brand); margin: 1.8rem 0; padding: 1rem 1.4rem;
-    background: var(--brand-pale); border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--brand-pale); border-radius: 0;
     font-style: italic; color: var(--ink);
 }
 blockquote > :last-child { margin-bottom: 0; }
@@ -536,4 +536,9 @@ pre { position: relative; }
 /* 更窄屏幕：meta 两行避免被裁切 */
 @media (max-width: 460px) {
     .home-hero .hm-meta { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+
+/* 引用块全局样式：统一为方正直角，避免左方右圆不协调 */
+blockquote, .zp-quote-box {
+    border-radius: 0 !important;
 }

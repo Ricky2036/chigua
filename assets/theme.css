@@ -410,62 +410,59 @@ pre { position: relative; }
 /* ---------- 话题首页（编辑部封面式：暖色 hero + 目录条目） ---------- */
 .home-wrap { max-width: 1080px; margin: 0 auto; padding: 44px 24px 80px; }
 
-/* ——— Hero：暖色渐变大卡 ——— */
+/* ——— Hero：深墨大卡（配色为用户拍板的深墨版；标题/居中/两列为后续功能改动） ——— */
 .home-hero {
     position: relative; overflow: hidden;
-    background: linear-gradient(130deg, #ff8a3d 0%, #f4633a 48%, #C0392B 100%);
-    border-radius: 22px;
+    background: #17172b; border-radius: 22px;
     padding: 42px 44px 38px; margin-bottom: 26px;
 }
-/* 白色柔光，让渐变有空气感 */
+/* 右下角暖色光斑，左上小光点，打破深色的平（位置避开顶部 meta 行） */
 .home-hero::before {
     content: ""; position: absolute; inset: 0;
     background:
-        radial-gradient(560px 400px at 108% 128%, rgba(255,255,255,.18), transparent 60%),
-        radial-gradient(380px 260px at -8% -12%, rgba(255,255,255,.12), transparent 60%);
+        radial-gradient(440px 320px at 112% 128%, rgba(255,140,51,.22), transparent 60%),
+        radial-gradient(320px 220px at -8% -10%, rgba(255,107,0,.10), transparent 60%);
     pointer-events: none;
 }
 .home-hero::after {           /* 底部极细高光线 */
     content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent);
 }
 .home-hero > * { position: relative; }
 .home-hero .hm-meta {
     display: flex; align-items: baseline; justify-content: space-between;
     gap: 16px; margin-bottom: 22px;
     font-family: var(--font-sans); font-size: 11px; font-weight: 800;
-    letter-spacing: .22em; color: rgba(255,255,255,.78);
+    letter-spacing: .22em; color: rgba(255,255,255,.52);
 }
-.home-hero .hm-meta .hm-no { color: #FFE08A; letter-spacing: .14em; }
+.home-hero .hm-meta .hm-no { color: #ff8c33; letter-spacing: .14em; }
 .home-hero h1 {
     font-family: var(--font-serif);
     font-size: clamp(42px, 7vw, 62px); font-weight: 900;
     color: #fff; letter-spacing: -0.02em; line-height: 1.05;
     margin-bottom: 16px;
-    text-shadow: 0 2px 18px rgba(150,30,10,.25);
 }
-.home-hero h1 em { font-style: normal; color: #FFE08A; }
+.home-hero h1 em { font-style: normal; color: #ff8c33; }
 .home-hero .hm-sub {
     font-family: var(--font-sans); font-size: 14.5px; line-height: 1.85;
-    color: rgba(255,255,255,.85); max-width: 560px; margin-bottom: 30px;
+    color: rgba(255,255,255,.62); max-width: 560px; margin-bottom: 30px;
 }
 /* 统计条：三段数字块整体居中 */
 .home-hero .hm-stats {
-    display: flex; gap: 0; border-top: 1px solid rgba(255,255,255,.28);
+    display: flex; gap: 0; border-top: 1px solid rgba(255,255,255,.14);
     padding-top: 22px;
 }
 .home-hero .hs { flex: 1; text-align: center; }
-.home-hero .hs + .hs { border-left: 1px solid rgba(255,255,255,.28); }
+.home-hero .hs + .hs { border-left: 1px solid rgba(255,255,255,.14); }
 .home-hero .hs b {
     display: block; font-family: var(--font-sans);
     font-size: 27px; font-weight: 800; color: #fff; line-height: 1.1;
     letter-spacing: -0.02em; margin-bottom: 5px;
-    text-shadow: 0 1px 8px rgba(150,30,10,.2);
 }
-.home-hero .hs b i { font-style: normal; font-size: 14px; font-weight: 700; margin-left: 2px; color: rgba(255,255,255,.85); }
+.home-hero .hs b i { font-style: normal; font-size: 14px; font-weight: 700; margin-left: 2px; color: rgba(255,255,255,.75); }
 .home-hero .hs span {
     font-family: var(--font-sans); font-size: 11.5px; letter-spacing: .06em;
-    color: rgba(255,255,255,.75);
+    color: rgba(255,255,255,.45);
 }
 
 /* ——— 话题索引：两列并排的目录条目 ——— */
@@ -544,6 +541,11 @@ pre { position: relative; }
     font-family: var(--font-sans);
 }
 
+/* 深色模式：hero 加一圈内描边与页面底色区分开 */
+@media (prefers-color-scheme: dark) {
+    .home-hero { background: #14142a; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); }
+}
+
 @media (max-width: 980px) {
     .topic-index { grid-template-columns: 1fr; }
 }
@@ -551,7 +553,7 @@ pre { position: relative; }
     .home-wrap { padding: 28px 18px 60px; }
     .home-hero { padding: 32px 24px 28px; border-radius: 18px; }
     .home-hero .hm-stats { flex-direction: column; gap: 14px; }
-    .home-hero .hs + .hs { border-left: none; padding-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: 14px; }
+    .home-hero .hs + .hs { border-left: none; padding-left: 0; border-top: 1px solid rgba(255,255,255,.12); padding-top: 14px; }
     .home-hero .hm-meta { letter-spacing: .14em; gap: 6px; }
     .topic-row { grid-template-columns: 1fr; gap: 14px; padding: 22px 20px; }
     .topic-row .tr-num { font-size: 40px; -webkit-text-stroke-width: 1.5px; }

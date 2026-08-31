@@ -131,7 +131,7 @@
     display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
     font-family: var(--font-sans); font-size: 11.5px; font-weight: 800;
     letter-spacing: .14em; color: var(--tc, var(--brand));
-    line-height: 1; margin-bottom: 10px;
+    line-height: 1; margin-bottom: 16px;
 }
 .topic-row .tr-kicker i { font-style: normal; color: var(--line); font-weight: 400; }
 .topic-row h2 {

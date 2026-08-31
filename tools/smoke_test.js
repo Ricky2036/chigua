@@ -66,12 +66,12 @@ for (const p of PAGES) {
         const hs = doc.querySelectorAll('.main-content h1, .main-content h2, .main-content h3');
         ok(tocLinks.length === hs.length,
             `目录自动/保留生成：链接 ${tocLinks.length} 条 vs 标题 ${hs.length} 个`);
-        if (p.startsWith('sunyuchen')) {
+        if (p.startsWith('sunge')) {
             const txt = [...tocLinks].map(a => a.textContent.trim());
             ok(txt.includes('一、蒙太奇拉古纳海滩'), '目录含本话题章节（非继承钉内目录）');
             ok(!txt.some(t => t.includes('置身钉内')), '目录不含钉钉话题残留');
         }
-        if (p.startsWith('dingnei')) {
+        if (p.startsWith('alibaba')) {
             const txt = [...tocLinks].map(a => a.textContent.trim());
             ok(txt.some(t => t.includes('置身钉内')), '钉钉目录完整保留');
             ok(txt.some(t => t.includes('云空未必空')), '钉钉目录含收官篇');

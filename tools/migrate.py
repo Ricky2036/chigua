@@ -139,7 +139,7 @@ def brand_data_uri():
 # 其余话题都以它生成的页面为模板换掉正文。所以删除 TOPICS[0] 会让脚本失去模板来源。
 TOPICS = [
     {
-        "slug": "dingnei",
+        "slug": "alibaba",
         "label": "阿里巴巴 · 内网风暴",      # 切换器标题
         "sub": "钉钉离职长文全编",           # 首页条目副标题
         "color": "#ff6b00",                 # 主题色（切换器圆点 + 首页卡片）
@@ -149,7 +149,7 @@ TOPICS = [
         "tags": ["<b>5</b> 篇长文", "约 <b>8.9 万</b> 字", "含官方回应", "名物注释"],
     },
     {
-        "slug": "sunyuchen",
+        "slug": "sunge",
         "label": "孙宇晨 · 我的女友景甜",
         "sub": "长文精校与事件全貌",
         "color": "#C0392B",
@@ -216,8 +216,8 @@ def topic_switcher(current):
 import sys
 SOURCE = f"{DATA}/dingnei_source.html"
 if "--snapshot" in sys.argv:
-    cur = open("dingnei/index.html", encoding="utf-8").read()
-    assert "<main class=\"main-content\"" in cur, "dingnei/index.html 不是完整文章页"
+    cur = open(f"{SOURCE_TOPIC['slug']}/index.html", encoding="utf-8").read()
+    assert "<main class=\"main-content\"" in cur, f"{SOURCE_TOPIC['slug']}/index.html 不是完整文章页"
     full_css = open("assets/theme.css", encoding="utf-8").read()
     assert full_css.endswith(CSS_EXT), "assets/theme.css 结尾不是扩展段，无法反推基础样式"
     base = full_css[: len(full_css) - len(CSS_EXT)].strip()
@@ -240,7 +240,7 @@ if "--snapshot" in sys.argv:
     assert "assets/reader.js" not in cur and "assets/brand." not in cur, \
         "快照还原失败：仍残留在 assets/ 的外链引用"
     open(SOURCE, "w", encoding="utf-8").write(cur)
-    print(f"已快照 dingnei/index.html → {SOURCE}（{len(cur)} 字符，已还原为自包含单文件）")
+    print(f"已快照 {SOURCE_TOPIC['slug']}/index.html → {SOURCE}（{len(cur)} 字符，已还原为自包含单文件）")
 if not os.path.exists(SOURCE):
     sys.exit(f"缺少迁移输入快照 {SOURCE}\n请先执行：python3 tools/migrate.py --snapshot")
 src = open(SOURCE, encoding="utf-8").read()
@@ -305,7 +305,7 @@ open(f"{slug0}/index.html", "w", encoding="utf-8").write(h)
 print(f"{slug0}/index.html  {os.path.getsize(slug0 + '/index.html')} bytes")
 assert '<style' not in h, "仍有内联 style"
 assert len(re.findall(r'class="topic-item[^"]*current"', h)) == 1
-assert SOURCE_TOPIC["label"] in h, "dingnei 顶栏标题未设置为话题名称"
+assert SOURCE_TOPIC["label"] in h, f"{slug0} 顶栏标题未设置为话题名称"
 
 
 # ================================================================ 3. 其余话题页

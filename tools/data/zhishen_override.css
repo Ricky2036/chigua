@@ -9,12 +9,20 @@
         }
         .zp-lead + .zp-lead { margin-top: -4px; }
 
+        h1 {
+            margin-top: 3.6rem;
+            margin-bottom: 1.2rem;
+        }
+        h1:first-of-type {
+            margin-top: 1.8rem;
+        }
+
         /* 篇目元信息条：作者 / 时间 / 保真度徽章 */
         .zp-meta {
-            display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
-            margin: -6px 0 20px; padding-bottom: 12px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+            margin: 14px 0 36px; padding-bottom: 16px;
             border-bottom: 1px dashed var(--line);
-            font-family: var(--font-sans); font-size: 12px; line-height: 1.6;
+            font-family: var(--font-sans); font-size: 12.5px; line-height: 1.6;
         }
         .zp-who { color: var(--ink); font-weight: 600; }
         .zp-when { color: var(--muted); }

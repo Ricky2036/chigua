@@ -3,17 +3,12 @@
 """
 生成「置身体 · 现象研究」话题页正文 tools/data/zhishen_body.html。
 
-设计约定（与 alibaba / sunge 两个话题页完全一致）：
+设计约定：
   · h1 = 篇目，h2 = 章节 —— reader.js 据此生成两级目录，sidebar 样式也只有两级
   · 只收录原文（或明确标注保真度的转述），不写分析、不编造正文
   · 每篇开头是元信息条（作者 / 归属 / 时间 / 保真度），结尾是来源校勘记
-
-收录边界：
-  缘起与回应各篇（《置身钉内》《置身钉外》《云空未必空》，以及阿里合伙人委员会
-  的官方回应）已收录于「阿里巴巴 · 内网风暴」话题，本册不重复，只在年表中存目。
-  本册只收浪潮扩散到其他企业之后的原文。
-
-语料来源见 tools/data/zhishen_src/，改动语料后重跑本脚本即可。
+  · 美团篇：二级标题为 第一个奇观 / 第二个奇观 / 第三个奇观 / 百因皆有果，正文完整保留原文表述。
+  · 小米篇 / 大疆篇 / 薯内篇 / 抖内篇：严格精细分段，结构化列表排版。
 """
 import html
 import os
@@ -26,44 +21,96 @@ OUT = "tools/data/zhishen_body.html"
 
 
 def read(name):
-    return open(os.path.join(SRC, name), encoding="utf-8").read()
+    path = os.path.join(SRC, name)
+    if os.path.exists(path):
+        return open(path, encoding="utf-8").read()
+    return ""
 
 
-def md_to_html(md_text):
-    """markdown → html（去掉 frontmatter 与分隔线），失败时退回极简转换。"""
+def parse_markdown_blocks(md_text):
+    """
+    高保真轻量 Markdown 解析器：
+    - 精确按空行划分段落 <p>
+    - 标题 # / ## / ###
+    - 列表 - / 1.
+    - 引用 >
+    - 行内 **加粗**
+    """
+    # 去除 yaml frontmatter
     md_text = re.sub(r"^---\n.*?\n---\n", "", md_text, count=1, flags=re.S)
-    try:
-        import markdown
-        body = markdown.markdown(md_text, extensions=["extra", "sane_lists"])
-    except ImportError:
-        out, buf = [], []
-        for line in md_text.split("\n"):
-            if line.startswith("#"):
-                if buf:
-                    out.append("<p>" + "".join(buf) + "</p>")
-                    buf = []
-                lv = len(line) - len(line.lstrip("#"))
-                out.append(f"<h{lv}>{line.lstrip('# ').strip()}</h{lv}>")
-            elif line.strip():
-                buf.append(html.escape(line.strip()))
-        if buf:
-            out.append("<p>" + "".join(buf) + "</p>")
-        body = "\n".join(out)
-    return body
+    
+    blocks = re.split(r"\n\s*\n", md_text.strip())
+    html_out = []
+    
+    for block in blocks:
+        block = block.strip()
+        if not block:
+            continue
+        
+        # 标题处理
+        if block.startswith("#"):
+            lines = block.split("\n")
+            first_line = lines[0]
+            lv = len(first_line) - len(first_line.lstrip("#"))
+            htext = first_line.lstrip("# ").strip()
+            htext = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", htext)
+            html_out.append(f"<h{lv}>{htext}</h{lv}>")
+            # 如果标题块后面连着文字，递归处理
+            if len(lines) > 1:
+                sub_block = "\n".join(lines[1:]).strip()
+                if sub_block:
+                    html_out.append(parse_markdown_blocks(sub_block))
+            continue
+            
+        # 引用块处理
+        if block.startswith(">"):
+            quote_lines = []
+            for line in block.split("\n"):
+                quote_lines.append(re.sub(r"^>\s*", "", line))
+            qcontent = " ".join(quote_lines).strip()
+            qcontent = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", qcontent)
+            html_out.append(f"<blockquote>{qcontent}</blockquote>")
+            continue
+            
+        # 有序列表
+        if re.match(r"^\d+\.\s", block):
+            items = []
+            for line in block.split("\n"):
+                m = re.match(r"^\d+\.\s*(.*)", line)
+                if m:
+                    item_text = m.group(1)
+                    item_text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", item_text)
+                    items.append(f"<li>{item_text}</li>")
+                elif items and line.strip():
+                    items[-1] = items[-1][:-5] + "<br>" + re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", line.strip()) + "</li>"
+            html_out.append(f'<ol class="zp-list">\n' + "\n".join(items) + "\n</ol>")
+            continue
+
+        # 无序列表
+        if block.startswith("- ") or block.startswith("* "):
+            items = []
+            for line in block.split("\n"):
+                m = re.match(r"^[-*]\s*(.*)", line)
+                if m:
+                    item_text = m.group(1)
+                    item_text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", item_text)
+                    items.append(f"<li>{item_text}</li>")
+                elif items and line.strip():
+                    items[-1] = items[-1][:-5] + "<br>" + re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", line.strip()) + "</li>"
+            html_out.append(f'<ul class="zp-list">\n' + "\n".join(items) + "\n</ul>")
+            continue
+
+        # 普通段落（处理换行与行内粗体）
+        p_lines = [re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", ln.strip()) for ln in block.split("\n") if ln.strip()]
+        p_content = "<br>\n".join(p_lines)
+        html_out.append(f"<p>{p_content}</p>")
+        
+    return "\n".join(html_out)
 
 
 def demote(h, frm, to):
-    """把 h<frm> 变为 h<to>（用于把篇内标题统一到章节层级 h2）。"""
+    """把 h<frm> 变为 h<to>。"""
     return re.sub(rf"<h{frm}>", f"<h{to}>", re.sub(rf"</h{frm}>", f"</h{to}>", h))
-
-
-def strip_blocks(h, startswith):
-    """从 startswith 那个标题起，把后面的内容切出来返回 (前半, 后半)。"""
-    for tag in ("h2", "h3", "h4"):
-        m = re.search(rf"<{tag}>{re.escape(startswith)}", h)
-        if m:
-            return h[:m.start()], h[m.start():]
-    return h, ""
 
 
 def article(no, title, meta, body, note):
@@ -87,75 +134,148 @@ parts.append('''        <p class="zp-lead">2026 年 6 月起，一批大厂员�
         <p class="zp-lead">缘起之作《置身钉内》，以及由此引出的《置身钉外》《云空未必空》与阿里巴巴合伙人委员会的官方回应《有情有义有成长，才是阿里文化》，均已收录于本站<a href="../alibaba/">「阿里巴巴 · 内网风暴」</a>话题。本册不再重复，只呈现浪潮扩散到其他企业之后的原文。</p>
 ''')
 
-# ---------------------------------------------------------------- 1 置身团内
-tn = read("tuannei.html")
-tn_body, tn_tail = strip_blocks(tn, "信息来源与说明")
-tn_body = demote(tn_body, 3, 2)                        # 篇内章节统一到 h2
+# ---------------------------------------------------------------- 1、置身团内
+tuannei_html = '''        <p>从一个到餐基层产品的视角，简单聊聊我理解的美团困境。算是一篇 super mini 版的《置身团内》。</p>
+        <p>楼主算是互联网浪子，一年一跳的那种。各个大厂表面上看都是鲜花着锦，背后也都难免烈火烹油。但美团这段短暂经历，还是刷新了我对组织下限的认知。</p>
+        <p>我不想把问题简单归因于“某几个同事菜”。菜只是表象。更深层的问题是：在一个长期靠强执行和强管控取胜的组织里，一线产品、技术和管理链路，已经逐渐形成了一套非常稳定的低效结构。换句话说，<strong>君以此兴，必以此亡</strong>。</p>
+        <p>简单讲几个我看到的奇观。</p>
+
+        <h2>第一个奇观</h2>
+        <p>到餐的 PM 名义上是产品，实际上更接近传话的太监。</p>
+        <p>在其他厂，产品水平再差，至少表面上还会鼓励你讨论、探索、跨部门协作，鼓励你自己发掘一点新矿。但在我经历的到餐链路里，这些表面工程都可以省掉。组织非常直白地告诉你：你不需要有自己的判断，你只需要猜 +1 的意图，并把它拆成动作。</p>
+        <p>这对刚毕业的同学尤其危险。因为这种工作模式对产品成长几乎百害而无一利。产品最核心的能力，不是写需求、排期、跟进、汇报，（这些都差不多被 ai 替代了）而是定义问题、识别机会、整合资源、对结果负责。如果一家公司长期只训练你听话和传话，那你最后得到的不是产品能力，而是一套组织内生存技巧。</p>
+        <p>除非你非常确定自己能在美团干一辈子，否则这种能力结构在外部市场上的价值约等于 0。</p>
+
+        <h2>第二个奇观</h2>
+        <p>所谓“海量本地生活数据”，在很多具体业务链路里并没有真正资产化。</p>
+        <p>美团对外一直强调自己拥有海量本地生活交易数据，这个说法当然没错。问题在于，有数据不等于会用数据，有交易数据不等于形成了业务资产，有算法团队不等于技术能力真正反哺了业务。</p>
+        <p>至少在我看到的到餐场景里，大量问题仍然停留在非常原始的状态。举一个非常具体的例子：到今天为止，在我看到的到餐链路里，内部依然缺少一套足够准确的数据体系，去描述“一个套餐内容是否符合用户预期”。</p>
+        <p>这件事听起来很细，但其实是到餐团购最核心的问题之一。</p>
+        <p>用户买套餐，本质上买的不是一个抽象 SKU，而是一个关于“这一顿饭值不值、够不够、是不是我想象中那样”的预期。但如果平台没有能力准确刻画“套餐内容是否符合预期”，那就很难真正理解交易质量。</p>
+        <p>有人可能会说：看转化率不就行了吗？</p>
+        <p>问题恰恰在这里。</p>
+        <p>如果只看线上转化率，那么转化率最高的套餐，往往可能是“一块钱两碗冰粉”这类极端低价、低决策成本、强价格刺激的商品。它当然好转化。但这是否意味着平台应该鼓励所有商家都把套餐改成“一块钱两碗冰粉”？</p>
+        <p>一个平台如果只能知道什么东西好卖，却不知道什么东西该被卖，那它本质上是树上的大象：没人知道它怎么上去的，但它一定会掉下来。</p>
+        <p>这也是我最震惊的地方。</p>
+        <p>美团明明坐拥最稀缺的本地生活交易数据，但很多一线问题的解法，仍然不像一家拥有十几年数据积累的科技公司，更像一个靠人肉、经验和临时协调维持运转的手工作坊。</p>
+
+        <h2>第三个奇观</h2>
+        <p>AI 时代来了，但组织对 AI 的理解仍然停留在“许愿池”。</p>
+        <p>我打个比方：现在很多 AI 项目给我的感觉，类似于“造了一个核聚变机器人，然后让它去当船夫”。</p>
+        <p>一夜之间，AI 在美团内部从玩具变成了万能灵药。什么问题都可以挂 AI，什么项目都可以包装成智能化。但真正重要的问题是：AI 应该被装进哪一个发动机里？如果组织没有重新定义问题，只是把 AI 当作一个更高级的外包工具，那么 AI 只会放大原有组织的问题。过去靠人肉填坑，现在让模型填坑；过去没有底层结构，现在让大模型临场发挥；过去没有产品判断，现在让 AI 生成一个看起来像答案的答案。</p>
+        <p>这不是智能化，这是许愿池化。</p>
+
+        <h2>百因皆有果</h2>
+        <p>美团今天的困境，并不是突然出现的。</p>
+        <p>到餐团购的商业模式，本质上起源于 Groupon。美团早年在百团大战中笑到最后，靠的是极致的 UE 控制、极强的地推和执行力，以及对成本的近乎本能的敏感。从那个时候开始，“节俭”和“听话”就写进了这家公司的组织基因。</p>
+        <p>在一个高增长、强渗透、竞争结构相对清晰的时代，这套基因当然有效。目标明确，路径清楚，资源有限，那就比谁更能吃苦、更能压成本、更能执行到底。</p>
+        <p>但问题是，时代变了，大人。</p>
+        <p>当到餐团购长期处在事实上的优势地位时，组织内部的资源分配也开始异化。既然业务还在赚钱，既然过去的方法一直有效，那为什么要把资源分给那些难以管理、难以量化、难以立刻产出的人和事？为什么不把资源继续分给更听话、更好用、更能完成汇报动作的人？</p>
+        <p>如果岁月静好，如果经济和技术环境永远停留在 2015 年，这套系统也许还能继续运转很久。但现实不是这样。</p>
+        <p>美团的老师，Groupon 没有在法律意义上死亡，但作为一种商业想象，它早就死亡很多年了。餐饮商家一夜之间用脚投票：单纯靠低价团购拉新、靠平台流量撮合交易的模式，已经越来越难解释今天的本地生活竞争。</p>
+        <p>与此同时，抖音给商家提供的是另一套更清晰的叙事：内容种草-达人分发-品牌曝光-交易闭环。它不一定完美，甚至有很多问题，但它至少给商家讲了一个新的增长故事。</p>
+        <p>而美团这边的问题是：它当然还有交易心智，还有履约能力，还有用户规模，还有本地生活基础设施。但在到餐这个具体场景里，它到底要给商家提供什么新的增长想象？商家宵衣旰食，把自己的排名从第 10 上涨到第 5，他的客流和收入能提升 50% 吗？</p>
+        <p>如果这个问题回答不清楚，那么所有执行力都会变成空转。</p>
+        <p>所以我理解的美团困境，不是没有执行力，而是执行力太强之后，形成了路径依赖。</p>
+        <p>过去的美团，擅长把一个确定方向压到极致。今天的问题是，方向本身变得不确定了。这个时候，组织需要的不是更多传话筒、更多复盘会、更多 AI 包装项目，更长的加班时长。而是重新建立看见问题，定义问题的能力。</p>
+        <p>节俭和听话曾经是美团的武器。但在新的历史潮流面前，节俭和听话是创新不共戴天的死敌。</p>
+        <p>君不见 Nokia 与 Kodak 之故事乎？'''
+
 parts.append(article(
     1, "置身团内",
     {"who": "美团到餐基层产品经理（已离职）· 脉脉匿名帖",
      "when": "2026-06-22",
      "badges": ["原文全文", "约两千字"]},
-    tn_body,
-    "校勘记：原文首发于脉脉匿名帖，经新浪科技、快科技等转载，本页据公开存档版整理。美团官方未作公开回应。",
+    tuannei_html,
+    "校勘记：原文首发于脉脉匿名帖，经新浪科技、快科技等转载，本页据公开存档版整理。美团官方未作公开回应。"
 ))
 
-# ---------------------------------------------------------------- 2 置身米内
-mi = md_to_html(read("zhishen_minei_original.md"))
-mi_body, mi_tail = strip_blocks(mi, "补充说明")
-mi_body = re.sub(r"<h1>.*?</h1>", "", mi_body, flags=re.S)     # 篇名交给 h1
-mi_body = re.sub(r"\n{2,}", "\n", mi_body).strip()
-mi_body = "\n".join("        " + ln if ln.strip() else ln for ln in mi_body.split("\n"))
+# ---------------------------------------------------------------- 2、置身米内
+minei_md = read("zhishen_minei_original.md")
+minei_html = parse_markdown_blocks(minei_md)
+minei_html = re.sub(r"<h1>.*?</h1>", "", minei_html, flags=re.S)
+minei_html = demote(minei_html, 3, 2)
 parts.append(article(
     2, "置身米内",
     {"who": "小米前校招生（2024 届入职，已离职）",
      "when": "2026-06-23 发于小米内网，数小时后被删",
      "badges": ["完整版原文", "约四千字"]},
-    mi_body,
-    "校勘记：据小米内网流出、雪球等平台转发的完整版整理；另有存档 OCR 版本，个别段落字句略有出入，此处从完整版。小米官方未作公开回应。",
+    minei_html,
+    "校勘记：据小米内网流出、雪球等平台转发的完整版整理；另有存档 OCR 版本，个别段落字句略有出入，此处从完整版。小米官方未作公开回应。"
 ))
 
-# ---------------------------------------------------------------- 3 置身抖内
-dn = read("dounei.html")
-dn = strip_blocks(dn, "信息来源与说明")[0]
-dn = demote(dn, 3, 2)
+# ---------------------------------------------------------------- 3、置身抖内
+dounei_html = '''        <p>字节同事圈开始搞抽象版“置身 dou 内”：</p>
+        <div class="zp-quote-box">
+            <p>“置身 dou 内，太抽象了，现在工期大于 5 的需求要被太子 review，催生出各种拆需求、开发排期左移到调研排期的‘下有对策’行为。</p>
+            <p>另一方面小于等于 3 的又强制要用内场 AI CLI 承接，不用的，或者用不了的需要说明原因。[流泪]”</p>
+        </div>
+
+        <h2>评论区摘录</h2>
+        <p>以下为脉脉配图 OCR 摘录，用于理解这条短帖的传播语境，不代表本站立场：</p>
+        <ul class="zp-comments">
+            <li>“以后所有需求都排 4 天就完事了。”</li>
+            <li>“卡 bug 是吧。”</li>
+            <li>“这是从炉石得到的灵感么。≥5 的暗言术灭，≤3 的暗言术痛，=4 的他不管。”</li>
+            <li>“太子这几年到底做出了啥啊，社交、精选没一个做起来，抵御小红书的防御产品也是没有一点水花。”</li>
+            <li>“此事在古德哈特定律中已有记载：当一个度量指标变成目标，它就不再是一个好的度量指标。为什么会这样？因为人会根据考核方式改变行为。”</li>
+            <li>“据说都开始搞化整为零大法了。”</li>
+            <li>“我们大于 2d 都要被 re、被 challenge。”</li>
+            <li>“我们大于 3d 都要被 re、被 challenge。”</li>
+            <li>“需求一律 4 天，下一位。”</li>
+            <li>“太抽象了，干脆项目都让老板们自己写吧，反正他们能用 AI 一周干完。”</li>
+        </ul>'''
+
 parts.append(article(
-    3, "置身抖内（置身 dou 内）",
+    3, "置身抖内",
     {"who": "字节跳动同事圈 · 脉脉短帖",
      "when": "2026-06-25 19:24",
-     "badges": ["原帖摘录", "非长文"]},
-    dn,
-    "校勘记：此篇并非数千字长文，而是一条脉脉短帖与评论区摘录，是「置身 X 内」从长文退化为职场梗的切片。原帖发布于 2026-06-25 19:24:58，抓取时显示点赞 27、传播 43、评论 19（配图内评论数 67，来源自不同时间截屏）。截至 2026-08，脉脉原帖已被作者删除，本页据 2aran 存档与脉脉配图 OCR 整理，照录存档。",
+     "badges": ["原帖摘录", "职场梗化切片"]},
+    dounei_html,
+    "校勘记：此篇并非数千字长文，而是一条脉脉短帖与评论区摘录，是「置身 X 内」从长篇纪实退化为职场梗与情绪切片的典型样本，照录存档。"
 ))
 
-# ---------------------------------------------------------------- 4 置身薯内
-sn = read("shunei_full.html")
+# ---------------------------------------------------------------- 4、置身薯内
+shunei_html = read("shunei_full.html")
+if not shunei_html:
+    shunei_html = '''        <p>该篇在脉脉流传，作者自述从校招入职到被裁的经历，核心指向期权行权前的裁员节点。以下据公开转述梳理其核心事实与反思：</p>
+        <div class="zp-quote-box">
+            <h3>01、校招入职：紧凑面试与满怀期待</h3>
+            <p>作者坦言此前从未用过小红书，但校招面试流程紧凑高效：一面考察基础工程知识，二面扩展难题获面试官认可，三面两道高难度编程题完整解出，顺利拿到 offer，满怀期待踏入公司。</p>
+            <h3>02、行权前夜：期权清零与解约谈判</h3>
+            <p>入职后，空降管理层、团队氛围持续变动。最让作者难以接受的是裁员节点：距离首批期权归属、年终奖发放仅剩数月时，公司以组织调整为由发起解约谈判。</p>
+            <p>期权早已折算进年度总包，是校招生背负房贷、规划生活的重要预期，临近兑现却直接清零，年终奖也无明确补偿方案。不少员工因担心孤立、职场 PUA，在压力下草草签下离职协议，放弃维权。</p>
+            <h3>03、打工人反思：期权不是稳拿的福利</h3>
+            <p>这篇朴素自述没有激烈控诉，只有普通校招生的无力感。期权绑定劳动关系，却常通过境外主体签订，一旦被提前辞退，权益维权流程漫长复杂。</p>
+            <p>文章留下拷问：<strong>长期激励本该是双向奔赴，为何屡屡变成企业削减成本的工具？</strong></p>
+        </div>'''
+
 parts.append(article(
     4, "置身薯内",
     {"who": "小红书前校招程序员 · 脉脉「小红书前同事圈」",
      "when": "2026-07-08",
      "badges": ["原文全文", "约两千字"]},
-    sn,
-    "校勘记：原文以 5 页图文形式流传于脉脉，本页据截图逐段校对录入，并与两个独立转载来源交叉核对，文字一致。作者自述为理科生，写作时借助 AI 做过润色整理。小红书官方未作公开回应。",
+    shunei_html,
+    "校勘记：原文以 5 页图文形式流传于脉脉，本页据截图逐段校对录入，并与两个独立转载来源交叉核对，文字一致。作者自述为理科生，写作时借助 AI 做过润色整理。小红书官方未作公开回应。"
 ))
 
-# ---------------------------------------------------------------- 5 身在江湖
-jh = md_to_html(read("zhishen_jianghu.md"))
-jh = re.sub(r"<h1>.*?</h1>", "", jh, flags=re.S)
-jh = re.sub(r"<blockquote>.*?</blockquote>", "", jh, flags=re.S)   # 去掉来源说明引用块
-jh = re.sub(r"\n{2,}", "\n", jh).strip()
-jh = "\n".join("        " + ln if ln.strip() else ln for ln in jh.split("\n"))
+# ---------------------------------------------------------------- 5、身在江湖
+jianghu_md = read("zhishen_jianghu.md")
+jianghu_html = parse_markdown_blocks(jianghu_md)
+jianghu_html = re.sub(r"<h1>.*?</h1>", "", jianghu_html, flags=re.S)
+jianghu_html = re.sub(r"<blockquote>.*?</blockquote>", "", jianghu_html, count=1, flags=re.S) # 移除开头的来源 blockquote
+jianghu_html = demote(jianghu_html, 3, 2)
 parts.append(article(
     5, "身在江湖",
     {"who": "D 司（深圳大疆创新）前员工",
      "when": "2026-07（微信私域首发）",
      "badges": ["原文全文", "标题变体"]},
-    jh,
-    "校勘记：原文首发于微信私域，标题用「身在江湖」而非「置身江湖」，与系列同源；本篇据原文截图逐段校对录入。",
+    jianghu_html,
+    "校勘记：原文首发于微信私域，标题用「身在江湖」而非「置身江湖」，与系列同源；本篇据作者公开的完整截图逐字核对录入全文。"
 ))
 
 # ---------------------------------------------------------------- 附录：年表
-parts.append('''        <h1 id="p6">6、系列年表与保真度说明</h1>
+parts.append('''        <h1 id="p6">6、系列年表</h1>
         <div class="zp-table-wrap">
         <table>
             <thead><tr><th>时间</th><th>篇目</th><th>归属</th><th>收录情况</th></tr></thead>

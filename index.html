@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大厂八卦 · 阿里巴巴</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='32' y2='32' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0%25' stop-color='%23FF6B00'/%3E%3Cstop offset='100%25' stop-color='%23E83800'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8.5' fill='url(%23bg)'/%3E%3Crect x='0.5' y='0.5' width='31' height='31' rx='8' stroke='rgba(255,255,255,0.22)' stroke-width='1' fill='none'/%3E%3Cpath d='M15.5 6.5C9.5 6.5 5 10 5 14.2c0 4.3 4.5 7.6 9.8 7.6 2.4 0 4.8.9 7.4 2.6-.8-1.6-1.5-3.4-1.8-5 3.2-1.2 5.4-3.1 5.4-5.2 0-4.2-4.6-7.7-10.3-7.7z' fill='%23fff'/%3E%3Ccircle cx='11.5' cy='14.2' r='1.35' fill='%23FF5200'/%3E%3Ccircle cx='15.5' cy='14.2' r='1.35' fill='%23FF5200'/%3E%3Ccircle cx='19.5' cy='14.2' r='1.35' fill='%23FF5200'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='32' y2='32' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0%25' stop-color='%23FF6B00'/%3E%3Cstop offset='100%25' stop-color='%23E83800'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8.5' fill='url(%23bg)'/%3E%3Crect x='0.5' y='0.5' width='31' height='31' rx='8' stroke='rgba(255,255,255,0.22)' stroke-width='1' fill='none'/%3E%3Crect x='7.5' y='6' width='17' height='20' rx='3.5' fill='%23fff'/%3E%3Crect x='10.5' y='10' width='6' height='2' rx='1' fill='%23FF5200'/%3E%3Crect x='10.5' y='14' width='11' height='2' rx='1' fill='%23FF7A22'/%3E%3Crect x='10.5' y='18' width='8' height='2' rx='1' fill='%23CBD5E1'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
@@ -383,17 +383,19 @@ pre { position: relative; }
                             <stop offset="0%" stop-color="#FF6B00"/>
                             <stop offset="100%" stop-color="#E83800"/>
                         </linearGradient>
-                        <filter id="bubble-shadow" x="-10%" y="-10%" width="120%" height="120%">
-                            <feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#701200" flood-opacity="0.25"/>
+                        <filter id="doc-shadow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#701200" flood-opacity="0.3"/>
                         </filter>
                     </defs>
                     <rect width="32" height="32" rx="8.5" fill="url(#logo-bg)"/>
                     <rect x="0.5" y="0.5" width="31" height="31" rx="8" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
-                    <g filter="url(#bubble-shadow)">
-                        <path d="M 15.5 6.5 C 9.5 6.5, 5 10, 5 14.2 C 5 18.5, 9.5 21.8, 14.8 21.8 C 17.2 21.8, 19.6 22.7, 22.2 24.4 C 21.4 22.8, 20.7 21, 20.4 19.4 C 23.6 18.2, 25.8 16.3, 25.8 14.2 C 25.8 10, 21.2 6.5, 15.5 6.5 Z" fill="#FFFFFF"/>
-                        <circle cx="11.5" cy="14.2" r="1.35" fill="#FF5200"/>
-                        <circle cx="15.5" cy="14.2" r="1.35" fill="#FF5200"/>
-                        <circle cx="19.5" cy="14.2" r="1.35" fill="#FF5200"/>
+                    <g filter="url(#doc-shadow)">
+                        <rect x="7.5" y="6" width="17" height="20" rx="3.5" fill="#FFFFFF"/>
+                        <!-- Heading accent tag in Alibaba Orange -->
+                        <rect x="10.5" y="10" width="6" height="2" rx="1" fill="#FF5200"/>
+                        <!-- Text lines inside document -->
+                        <rect x="10.5" y="14" width="11" height="2" rx="1" fill="#FF7A22"/>
+                        <rect x="10.5" y="18" width="8" height="2" rx="1" fill="#CBD5E1"/>
                     </g>
                 </svg>
                 大厂八卦 · 阿里巴巴

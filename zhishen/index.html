@@ -11,27 +11,7 @@
     <link rel="stylesheet" href="../assets/theme.css">
     <style>
 
-        /* 本话题主题色：靛青（与阿里橙、朱砂红区分，仅覆盖变量） */
-        :root {
-            --brand: #2F5D7C;
-            --brand-light: #EDF3F7;
-            --brand-pale: #E4EDF3;
-        }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --brand: #7FB2D0;
-                --brand-light: rgba(47,93,124,0.18);
-                --brand-pale: rgba(47,93,124,0.09);
-            }
-        }
-        .btn { border-color: rgba(47,93,124,.22); }
-        .main-content a:not(.no-style) { border-bottom-color: rgba(47,93,124,0.3); }
-        .back-to-top { box-shadow: 0 4px 14px rgba(47,93,124,0.32); }
-        .logo-icon { filter: drop-shadow(0 2px 5px rgba(47,93,124,0.28)); }
-        h1 { border-bottom-color: var(--brand); }
-        h2 { border-bottom-color: rgba(47,93,124,0.35); }
-        /* 一级目录紧跟首个章节时收紧，避免 margin 叠加显得松散 */
-        h1 + h2 { margin-top: 1.4em; }
+        /* 本话题沿用全站品牌色（与「阿里巴巴 · 内网风暴」一致），不覆盖任何主题变量 */
 
         /* ---- 本话题专属组件 ---- */
         /* 编者按：整册的阅读说明 */
@@ -79,7 +59,7 @@
             .zp-meta { gap: 6px 8px; }
             .zp-sign { text-align: left; }
         }
-    
+
     </style>
 </head>
 <body>
@@ -110,7 +90,7 @@
                 </button>
                 <div class="topic-dropdown" id="topicDropdown">
                     <div class="dd-label">全 部 话 题</div>
-                    <a href="../alibaba/" class="topic-item"><span class="dot" style="background:#ff6b00"></span><span class="txt">阿里巴巴 · 内网风暴</span></a><a href="../sunge/" class="topic-item"><span class="dot" style="background:#C0392B"></span><span class="txt">孙宇晨 · 我的女友景甜</span></a><a href="../zhishen/" class="topic-item current"><span class="dot" style="background:#2F5D7C"></span><span class="txt">置身体 · 现象研究</span></a>
+                    <a href="../alibaba/" class="topic-item"><span class="dot" style="background:#ff6b00"></span><span class="txt">阿里巴巴 · 内网风暴</span></a><a href="../sunge/" class="topic-item"><span class="dot" style="background:#C0392B"></span><span class="txt">孙宇晨 · 我的女友景甜</span></a><a href="../zhishen/" class="topic-item current"><span class="dot" style="background:#ff6b00"></span><span class="txt">置身体 · 现象研究</span></a>
                     <div class="dd-sep"></div>
                     <a href="../" class="topic-item home"><span class="dot" style="background:var(--ink)"></span><span class="txt">返回话题首页</span></a>
                 </div>

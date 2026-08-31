@@ -30,7 +30,7 @@ def read(name):
 def parse_markdown_blocks(md_text):
     """
     高保真轻量 Markdown 解析器：
-    - 精确按空行划分段落 <p>
+    - 精确按空行划分段落 <p>，单行自然段均作为独立 <p>
     - 标题 # / ## / ###
     - 列表 - / 1.
     - 引用 >
@@ -39,71 +39,95 @@ def parse_markdown_blocks(md_text):
     # 去除 yaml frontmatter
     md_text = re.sub(r"^---\n.*?\n---\n", "", md_text, count=1, flags=re.S)
     
-    blocks = re.split(r"\n\s*\n", md_text.strip())
+    # 统一换行
+    md_text = md_text.replace("\r\n", "\n")
+    
+    # 按行扫描
+    lines = md_text.split("\n")
     html_out = []
     
-    for block in blocks:
-        block = block.strip()
-        if not block:
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line:
+            i += 1
             continue
         
         # 标题处理
-        if block.startswith("#"):
-            lines = block.split("\n")
-            first_line = lines[0]
-            lv = len(first_line) - len(first_line.lstrip("#"))
-            htext = first_line.lstrip("# ").strip()
+        if line.startswith("#"):
+            lv = len(line) - len(line.lstrip("#"))
+            htext = line.lstrip("# ").strip()
             htext = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", htext)
             html_out.append(f"<h{lv}>{htext}</h{lv}>")
-            # 如果标题块后面连着文字，递归处理
-            if len(lines) > 1:
-                sub_block = "\n".join(lines[1:]).strip()
-                if sub_block:
-                    html_out.append(parse_markdown_blocks(sub_block))
+            i += 1
             continue
             
         # 引用块处理
-        if block.startswith(">"):
+        if line.startswith(">"):
             quote_lines = []
-            for line in block.split("\n"):
-                quote_lines.append(re.sub(r"^>\s*", "", line))
+            while i < len(lines) and (lines[i].strip().startswith(">") or (lines[i].strip() and not lines[i].strip().startswith("#"))):
+                curr = lines[i].strip()
+                if curr.startswith(">"):
+                    curr = re.sub(r"^>\s*", "", curr)
+                quote_lines.append(curr)
+                i += 1
+                if i < len(lines) and not lines[i].strip():
+                    break
             qcontent = " ".join(quote_lines).strip()
             qcontent = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", qcontent)
             html_out.append(f"<blockquote>{qcontent}</blockquote>")
             continue
             
         # 有序列表
-        if re.match(r"^\d+\.\s", block):
+        if re.match(r"^\d+\.\s", line):
             items = []
-            for line in block.split("\n"):
-                m = re.match(r"^\d+\.\s*(.*)", line)
+            while i < len(lines):
+                curr = lines[i].strip()
+                if not curr:
+                    break
+                m = re.match(r"^\d+\.\s*(.*)", curr)
                 if m:
                     item_text = m.group(1)
                     item_text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", item_text)
                     items.append(f"<li>{item_text}</li>")
-                elif items and line.strip():
-                    items[-1] = items[-1][:-5] + "<br>" + re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", line.strip()) + "</li>"
+                elif items:
+                    items[-1] = items[-1][:-5] + "<br>" + re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", curr) + "</li>"
+                i += 1
             html_out.append(f'<ol class="zp-list">\n' + "\n".join(items) + "\n</ol>")
             continue
 
         # 无序列表
-        if block.startswith("- ") or block.startswith("* "):
+        if line.startswith("- ") or line.startswith("* "):
             items = []
-            for line in block.split("\n"):
-                m = re.match(r"^[-*]\s*(.*)", line)
+            while i < len(lines):
+                curr = lines[i].strip()
+                if not curr:
+                    break
+                m = re.match(r"^[-*]\s*(.*)", curr)
                 if m:
                     item_text = m.group(1)
                     item_text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", item_text)
                     items.append(f"<li>{item_text}</li>")
-                elif items and line.strip():
-                    items[-1] = items[-1][:-5] + "<br>" + re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", line.strip()) + "</li>"
+                elif items:
+                    items[-1] = items[-1][:-5] + "<br>" + re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", curr) + "</li>"
+                i += 1
             html_out.append(f'<ul class="zp-list">\n' + "\n".join(items) + "\n</ul>")
             continue
 
-        # 普通段落（处理换行与行内粗体）
-        p_lines = [re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", ln.strip()) for ln in block.split("\n") if ln.strip()]
-        p_content = "<br>\n".join(p_lines)
-        html_out.append(f"<p>{p_content}</p>")
+        # 普通自然段落（单段收集）
+        p_lines = []
+        while i < len(lines):
+            curr = lines[i].strip()
+            if not curr:
+                break
+            if curr.startswith("#") or curr.startswith(">") or re.match(r"^\d+\.\s", curr) or curr.startswith("- ") or curr.startswith("* "):
+                break
+            p_lines.append(re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", curr))
+            i += 1
+            
+        if p_lines:
+            p_content = "<br>".join(p_lines) if len(p_lines) > 1 and len("".join(p_lines)) < 80 else "".join(p_lines)
+            html_out.append(f"<p>{p_content}</p>")
         
     return "\n".join(html_out)
 
@@ -237,19 +261,6 @@ parts.append(article(
 
 # ---------------------------------------------------------------- 4、置身薯内
 shunei_html = read("shunei_full.html")
-if not shunei_html:
-    shunei_html = '''        <p>该篇在脉脉流传，作者自述从校招入职到被裁的经历，核心指向期权行权前的裁员节点。以下据公开转述梳理其核心事实与反思：</p>
-        <div class="zp-quote-box">
-            <h3>01、校招入职：紧凑面试与满怀期待</h3>
-            <p>作者坦言此前从未用过小红书，但校招面试流程紧凑高效：一面考察基础工程知识，二面扩展难题获面试官认可，三面两道高难度编程题完整解出，顺利拿到 offer，满怀期待踏入公司。</p>
-            <h3>02、行权前夜：期权清零与解约谈判</h3>
-            <p>入职后，空降管理层、团队氛围持续变动。最让作者难以接受的是裁员节点：距离首批期权归属、年终奖发放仅剩数月时，公司以组织调整为由发起解约谈判。</p>
-            <p>期权早已折算进年度总包，是校招生背负房贷、规划生活的重要预期，临近兑现却直接清零，年终奖也无明确补偿方案。不少员工因担心孤立、职场 PUA，在压力下草草签下离职协议，放弃维权。</p>
-            <h3>03、打工人反思：期权不是稳拿的福利</h3>
-            <p>这篇朴素自述没有激烈控诉，只有普通校招生的无力感。期权绑定劳动关系，却常通过境外主体签订，一旦被提前辞退，权益维权流程漫长复杂。</p>
-            <p>文章留下拷问：<strong>长期激励本该是双向奔赴，为何屡屡变成企业削减成本的工具？</strong></p>
-        </div>'''
-
 parts.append(article(
     4, "置身薯内",
     {"who": "小红书前校招程序员 · 脉脉「小红书前同事圈」",

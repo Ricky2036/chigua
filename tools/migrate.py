@@ -165,8 +165,9 @@ TOPICS = [
         "color": "#C0392B",
         "title": "孙宇晨 · 我的女友景甜",
         "kicker": "话 题 三",
-        "desc": "2026 年孙宇晨发布的长文，以及事件双方表态、公开信息比对与时间线梳理。",
-        "tags": ["<b>7</b> 部分正文", "约 <b>7.8 千</b> 字", "名物注释", "双方表态对照"],
+        "desc": "2026 年孙宇晨发布的长文，以及事件双方表态、公开信息比对与时间线梳理；"
+                "另按时间顺序收录赵长鹏、胡锡进、卢克文、孙宇晨的公开发言原文，逐字照录。",
+        "tags": ["<b>4</b> 大板块", "约 <b>1.5 万</b> 字", "名物注释", "双方表态", "公众反馈原文"],
     },
 ]
 SOURCE_TOPIC = TOPICS[0]      # 正文来自迁移快照的那个话题
@@ -371,8 +372,13 @@ def build_topic_page(tpl, cfg):
 
     # 主题色覆盖（可选：只覆盖 CSS 变量，公共样式不动）
     if ovr:
-        s = s.replace('<link rel="stylesheet" href="../assets/theme.css">',
-                      '<link rel="stylesheet" href="../assets/theme.css">\n    <style>\n' + ovr + "\n    </style>", 1)
+        # 必须用正则：模板里 href 带版本号（?v=20260831d），
+        # 用 str.replace 精确匹配无版本号的串会「静默不命中」，
+        # 结果是话题专属样式（.versus/.tl/.glossary/.anno 等）整块丢失且无任何报错。
+        s, n = re.subn(r'<link rel="stylesheet" href="\.\./assets/theme\.css(?:\?[^"]*)?">',
+                       lambda m: m.group(0) + "\n    <style>\n" + ovr + "\n    </style>",
+                       s, count=1)
+        assert n == 1, f"{slug}: 找不到 theme.css 引用，话题专属样式未注入（检查第 300 行写入的 href 写法）"
     # 图标不逐话题换色：三页共用 assets/brand.*（见 extract_brand_asset 注释）
 
     # 标题：浏览器标签保留话题区分；顶栏标题设置为本话题名称（与切换器一致）

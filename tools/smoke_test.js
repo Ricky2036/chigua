@@ -101,8 +101,11 @@ for (const p of PAGES) {
 
     // 各页品牌与资源
     const pref = p === 'index.html' ? './' : '../';
-    ok(html.includes(`href="${pref}assets/theme.css"`), `公共 CSS 路径正确 (${pref})`);
-    ok(html.includes(`src="${pref}assets/reader.js"`), `公共 JS 路径正确 (${pref})`);
+    // 用正则：生成时 href/src 带版本号（?v=20260831d），includes 精确匹配会静默失配
+    ok(new RegExp(`href="${pref.replace('/', '\\/')}assets\\/theme\\.css(\\?[^"]*)?"`).test(html),
+        `公共 CSS 路径正确 (${pref})`);
+    ok(new RegExp(`src="${pref.replace('/', '\\/')}assets\\/reader\\.js(\\?[^"]*)?"`).test(html),
+        `公共 JS 路径正确 (${pref})`);
     // 品牌图标：三页共用 assets/brand.*（共享文件，不内联 base64）
     const favTag = (html.match(/<link rel="icon"[^>]*>/) || [''])[0];
     ok(!!favTag, 'favicon 标签就位');

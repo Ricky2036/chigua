@@ -298,10 +298,10 @@ print(f"assets/reader.js  {os.path.getsize('assets/reader.js')} bytes")
 # 它的正文来自迁移快照（原始单文件页面），也是其余话题页的模板来源。
 slug0 = SOURCE_TOPIC["slug"]
 h = src
-h = re.sub(r"<style[^>]*>.*?</style>", '<link rel="stylesheet" href="../assets/theme.css?v=20260831d">', h, count=1, flags=re.S)
+h = re.sub(r"<style[^>]*>.*?</style>", '<link rel="stylesheet" href="../assets/theme.css?v=20260903">', h, count=1, flags=re.S)
 # 只替换页面末尾那个主脚本（保留 body 开头的防闪烁内联脚本）
 last = h.rfind("<script>")
-h = h[:last] + '<script src="../assets/reader.js?v=20260831d"></script>\n</body>\n</html>\n'
+h = h[:last] + '<script src="../assets/reader.js?v=20260903"></script>\n</body>\n</html>\n'
 h = re.sub(r'<link rel="icon"[^>]*>', lambda m: brand_favicon("../"), h, count=1)
 h = re.sub(r'<img class="logo-icon"[^>]*>', lambda m: brand_img("../"), h, count=1)
 # 标题：浏览器标签设置为话题标题
@@ -372,7 +372,7 @@ def build_topic_page(tpl, cfg):
 
     # 主题色覆盖（可选：只覆盖 CSS 变量，公共样式不动）
     if ovr:
-        # 必须用正则：模板里 href 带版本号（?v=20260831d），
+        # 必须用正则：模板里 href 带版本号（?v=20260903），
         # 用 str.replace 精确匹配无版本号的串会「静默不命中」，
         # 结果是话题专属样式（.versus/.tl/.glossary/.anno 等）整块丢失且无任何报错。
         s, n = re.subn(r'<link rel="stylesheet" href="\.\./assets/theme\.css(?:\?[^"]*)?">',
@@ -423,7 +423,7 @@ home = '''<!DOCTYPE html>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/theme.css?v=20260831d">
+    <link rel="stylesheet" href="./assets/theme.css?v=20260903">
     <style>
         .back-to-top { box-shadow: 0 4px 14px rgba(26,26,46,.28); }
     </style>
@@ -456,7 +456,7 @@ home = '''<!DOCTYPE html>
 
 __HOME_BODY__
 
-    <script src="./assets/reader.js?v=20260831d"></script>
+    <script src="./assets/reader.js?v=20260903"></script>
 </body>
 </html>
 '''
